@@ -195,3 +195,73 @@ IDs en `Int` auto-incrémentés plutôt que `cuid`/`uuid`.
   conteneur `postgres` (validée par introspection).
 - Le hachage du mot de passe n'est pas dans le schéma : à implémenter dans le
   service d'auth (S1-04), pas dans la couche données.
+
+---
+
+## ADR-005 — API CRUD tickets : intégration Prisma 7 avec NestJS
+
+**Date** : 31/07/2026 · **Statut** : Acceptée
+
+### Contexte
+
+S1-03 demande les routes créer/consulter/modifier/fermer un ticket. Prisma 7
+(installé depuis ADR-001) a changé plusieurs comportements par défaut par
+rapport aux versions précédentes, découverts en intégrant le client généré
+dans NestJS : le client par défaut est pensé pour un runtime ESM, ce qui entre
+en conflit avec un projet NestJS classique (CommonJS, décorateurs
+`emitDecoratorMetadata`).
+
+### Décision
+
+- **Sortie du client dans `src/generated/prisma`** (et non hors de `src/`
+  comme le place `prisma init` par défaut), pour rester sous un seul
+  `rootDir` TypeScript et obtenir une structure `dist/` prévisible.
+- **`moduleFormat = "cjs"`** explicite dans le générateur du schéma, pour que
+  le client généré n'utilise pas `import.meta.url` (incompatible avec un
+  chargement CommonJS).
+- **Driver adapter obligatoire** : Prisma 7 n'accepte plus une simple URL de
+  connexion au constructeur — `PrismaClient` exige un `adapter` (ici
+  `@prisma/adapter-pg`). `PrismaService` instancie `new PrismaPg({
+  connectionString: process.env.DATABASE_URL })` et le passe au constructeur.
+- **`"type": "commonjs"` explicite** dans `backend/package.json` : Node 22+
+  déduit le format d'un fichier `.js` par analyse de syntaxe quand le champ
+  `type` est absent, et se trompait sur le client généré. Le fixer
+  explicitement supprime toute ambiguïté.
+- **`nest-cli.json` : `deleteOutDir: false`** : combiné au polling de
+  `watchOptions` (nécessaire pour le hot-reload sous volume Windows, cf.
+  ADR-002), la suppression systématique de `dist/` avant recompilation créait
+  une fenêtre où `dist/main.js` n'existait plus, faisant échouer le
+  redémarrage du process.
+- **Transitions de statut validées côté service**, pas au niveau du schéma :
+  `isValidStatusTransition()` (`backend/src/tickets/ticket-status.util.ts`)
+  est une fonction pure isolée, testable unitairement sans dépendance à
+  Prisma — pensée pour S1-12.
+- **`createdById` fourni par le client dans `CreateTicketDto`** : en
+  l'absence d'authentification (S1-04 pas encore fait), pas d'autre source
+  pour l'identité de l'auteur. À retirer du DTO une fois le JWT en place, au
+  profit de l'utilisateur de la requête.
+
+### Alternatives écartées
+
+- **Générer le client dans `node_modules/.prisma`** (comportement historique
+  `prisma-client-js`) : aurait évité le problème de `rootDir`, mais le
+  générateur `prisma-client` (celui utilisé en Prisma 7) ne le permet plus
+  nativement de la même façon ; suivre la nouvelle convention `output`
+  personnalisé est la voie supportée.
+- **Passer par `ts-node` pour le script de seed** : échoue avec ce client —
+  le code généré en mode `cjs` contient des `require("./fichier.js")` en dur,
+  qui supposent une compilation préalable (le fichier `.js` doit exister à
+  côté du `.ts`). Le seed est donc placé dans `src/prisma/seed.ts`, compilé
+  par le même processus que le reste de l'app, et exécuté via
+  `node dist/prisma/seed.js`.
+
+### Conséquences
+
+- Toute nouvelle machine clonant le repo doit lancer `docker compose up
+  --build` (pas juste `up`) après un premier clone ou après toute
+  modification de `schema.prisma`, le temps que l'image régénère le client
+  dans le volume anonyme `/app/src/generated`.
+- `dist/` n'étant plus vidé automatiquement, un fichier source supprimé peut
+  laisser un `.js` orphelin dans `dist/` jusqu'au prochain rebuild complet de
+  l'image — acceptable en dev, sans impact en prod (image reconstruite à
+  chaque déploiement).
