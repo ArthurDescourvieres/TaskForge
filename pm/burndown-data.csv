@@ -1,0 +1,3 @@
+date,points_restants,commentaire
+2026-07-30,50,S1-01 terminé (2 pts) — setup repo + choix stack
+2026-07-31,47,S1-08 terminé (3 pts) — docker-compose dev front+back+BDD

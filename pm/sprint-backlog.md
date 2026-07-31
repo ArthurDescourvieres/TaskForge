@@ -42,7 +42,7 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | ID | Tâche | Story Points | Assigné à | Statut |
 |---|---|---|---|---|
 | S1-01 | Choix stack + setup repo (arborescence attendue) | 2 | Arthur | In Progress |
-| S1-02 | Schéma de BDD (tickets, users, rôles) | 3 | Abd-Ellah | To Do |
+| S1-02 | Schéma de BDD (tickets, users, rôles) | 3 | Abd-Ellah | Done |
 | S1-03 | API : CRUD tickets (créer/consulter/modifier/fermer) | 8 | Ibrahima | To Do |
 | S1-04 | API : authentification + système de rôles | 8 | Abd-Ellah | To Do |
 | S1-05 | API : assignation / réassignation | 5 | Ibrahima | To Do |
