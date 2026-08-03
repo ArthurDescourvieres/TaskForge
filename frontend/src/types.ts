@@ -1,11 +1,30 @@
 export type TicketPriority = 'BASSE' | 'MOYENNE' | 'HAUTE' | 'CRITIQUE';
 export type TicketStatus = 'OUVERT' | 'EN_COURS' | 'RESOLU' | 'FERME';
+export type Role = 'USER' | 'TECHNICIEN' | 'ADMIN';
 
 export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'USER' | 'TECHNICIEN' | 'ADMIN';
+  role: Role;
+}
+
+/** Ce que renvoie /auth/login, /auth/register et /auth/me. */
+export interface AuthUser {
+  id: number;
+  email: string;
+  name: string;
+  role: Role;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: AuthUser;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
 }
 
 export interface Ticket {
@@ -24,7 +43,7 @@ export interface CreateTicketInput {
   title: string;
   description: string;
   priority: TicketPriority;
-  createdById: number;
+  // Plus de createdById : l'API le déduit du jeton, il ne se déclare plus.
   assignedToId?: number;
 }
 

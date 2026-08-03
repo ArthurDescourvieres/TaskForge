@@ -41,7 +41,6 @@ export function CreateTicketDialog({ users, onCreate }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TicketPriority>('MOYENNE');
-  const [createdById, setCreatedById] = useState('');
   const [assignedToId, setAssignedToId] = useState(UNASSIGNED);
   const [submitting, setSubmitting] = useState(false);
 
@@ -54,7 +53,7 @@ export function CreateTicketDialog({ users, onCreate }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title || !description || !createdById) return;
+    if (!title || !description) return;
 
     setSubmitting(true);
     try {
@@ -62,7 +61,6 @@ export function CreateTicketDialog({ users, onCreate }: Props) {
         title,
         description,
         priority,
-        createdById: Number(createdById),
         assignedToId:
           assignedToId === UNASSIGNED ? undefined : Number(assignedToId),
       });
@@ -160,26 +158,8 @@ export function CreateTicketDialog({ users, onCreate }: Props) {
             </div>
           </div>
 
-          {/* Temporaire : sans authentification (S1-04), l'auteur du ticket doit
-              être choisi explicitement. À remplacer par l'utilisateur connecté. */}
-          <div className="grid gap-2">
-            <Label>Signalé par</Label>
-            <Select value={createdById} onValueChange={setCreatedById}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choisir un utilisateur…" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={String(user.id)}>
-                    {user.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <DialogFooter className="mt-2">
-            <Button type="submit" disabled={submitting || !createdById}>
+            <Button type="submit" disabled={submitting}>
               {submitting ? 'Création…' : 'Créer le ticket'}
             </Button>
           </DialogFooter>
