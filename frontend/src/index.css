@@ -125,6 +125,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Tailwind v4 a retiré le curseur « main » par défaut sur les boutons
+     (la preflight suit désormais le comportement natif du navigateur).
+     On le rétablit — sauf sur les éléments désactivés, qui gardent le leur. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
   body {
     @apply bg-background text-foreground;
     margin: 0;
