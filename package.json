@@ -12,6 +12,9 @@
   },
   "lint-staged": {
     "backend/**/*.ts": "npm --prefix backend run lint",
-    "frontend/**/*.{ts,tsx}": "npm --prefix frontend run format && npm --prefix frontend run lint"
+    "frontend/**/*.{ts,tsx}": [
+      "npm --prefix frontend run format",
+      "npm --prefix frontend run lint"
+    ]
   }
 }

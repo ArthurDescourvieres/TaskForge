@@ -11,20 +11,32 @@ import { isValidStatusTransition } from './ticket-status.util';
 
 const RESOLVING_STATUSES: TicketStatus[] = ['RESOLU', 'FERME'];
 
+// Partagé par toutes les requêtes : le frontend attend toujours createdBy/assignedTo.
+const WITH_USERS = {
+  createdBy: { select: { id: true, name: true } },
+  assignedTo: { select: { id: true, name: true } },
+};
+
 @Injectable()
 export class TicketsService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(dto: CreateTicketDto) {
-    return this.prisma.ticket.create({ data: dto });
+    return this.prisma.ticket.create({ data: dto, include: WITH_USERS });
   }
 
   findAll() {
-    return this.prisma.ticket.findMany({ orderBy: { createdAt: 'desc' } });
+    return this.prisma.ticket.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: WITH_USERS,
+    });
   }
 
   async findOne(id: number) {
-    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: WITH_USERS,
+    });
     if (!ticket) {
       throw new NotFoundException(`Ticket ${id} introuvable`);
     }
@@ -50,6 +62,7 @@ export class TicketsService {
     return this.prisma.ticket.update({
       where: { id },
       data: { ...dto, ...(resolvedAt && { resolvedAt }) },
+      include: WITH_USERS,
     });
   }
 
