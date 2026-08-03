@@ -1,5 +1,6 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { TicketCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createTicket, getTicketStats, getTickets, getUsers } from '@/api';
 import { CreateTicketDialog } from '@/components/CreateTicketDialog';
@@ -116,9 +117,11 @@ function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3.5">
           <div className="flex items-center gap-2.5">
             <span
-              className="size-6 rounded-md bg-gradient-to-br from-primary to-[var(--accent-soft)]"
+              className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground"
               aria-hidden
-            />
+            >
+              <TicketCheck className="size-4" strokeWidth={2.25} />
+            </span>
             <span className="font-heading text-[15px] font-semibold tracking-tight">
               TaskForge
             </span>
