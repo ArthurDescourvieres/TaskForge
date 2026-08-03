@@ -79,8 +79,9 @@ Deux configurations distinctes :
 - **`docker-compose.yml` (dev)** : code source monté en volume, hot-reload actif
   (Vite côté frontend, `nest start --watch` côté backend), images mono-stage,
   conteneurs exécutés en root.
-- **`docker-compose.prod.yml` (prod)** — à venir, tâches S2-05 à S2-07 : images
-  multi-stage, pas de volume source, utilisateur non-root, tags versionnés.
+- **`docker-compose.prod.yml` (prod)** — tâches S2-05 à S2-07 : images
+  multi-stage (`Dockerfile.prod`), pas de volume source, utilisateur non-root,
+  tags versionnés via `IMAGE_TAG` (jamais `:latest`).
 
 Le service `postgres` porte un `healthcheck` (`pg_isready`) et le backend
 attend `service_healthy` avant de démarrer.
@@ -112,8 +113,8 @@ attend `service_healthy` avant de démarrer.
 - Les ports sont paramétrables via `.env` (`FRONTEND_PORT`, `BACKEND_PORT`,
   `POSTGRES_PORT`) — nécessaire car d'autres projets occupent couramment les
   ports 5173 et 3000 sur le poste de développement.
-- Les Dockerfiles de production restent à écrire ; les gains de taille avant /
-  après devront être mesurés et documentés (S2-05).
+- Les Dockerfiles de production (`Dockerfile.prod`) et `docker-compose.prod.yml`
+  sont en place ; les gains de taille sont documentés dans le README.
 
 ---
 
