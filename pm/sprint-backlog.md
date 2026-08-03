@@ -43,7 +43,7 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 |---|---|---|---|---|
 | S1-01 | Choix stack + setup repo (arborescence attendue) | 2 | Arthur | In Progress |
 | S1-02 | Schéma de BDD (tickets, users, rôles) | 3 | Abd-Ellah | Done |
-| S1-03 | API : CRUD tickets (créer/consulter/modifier/fermer) | 8 | Ibrahima | Done |
+| S1-03 | API : CRUD tickets (créer/consulter/modifier/fermer) | 8 | Arthur | Done |
 | S1-04 | API : authentification + système de rôles | 8 | Abd-Ellah | To Do |
 | S1-05 | API : assignation / réassignation | 5 | Ibrahima | To Do |
 | S1-06 | Frontend : formulaire création + liste tickets | 8 | Arthur | To Do |
@@ -64,17 +64,17 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 
 | ID | Tâche | Story Points | Assigné à | Statut |
 |---|---|---|---|---|
-| S2-01 | Logging structuré JSON (backend) | 3 | À définir | To Do |
-| S2-02 | Endpoint /metrics (format Prometheus) | 3 | À définir | To Do |
-| S2-03 | Dashboard : stats + temps moyen de résolution | 5 | À définir | To Do |
-| S2-04 | Filtrage, tri et recherche textuelle | 5 | À définir | To Do |
-| S2-05 | Multi-stage builds Dockerfiles (front + back) | 5 | À définir | To Do |
-| S2-06 | docker-compose.prod.yml (séparation dev/prod) | 3 | À définir | To Do |
-| S2-07 | Sécurité Docker (non-root, .dockerignore, tags versionnés) | 3 | À définir | To Do |
-| S2-08 | Compléter les tests unitaires (calcul temps moyen, conflits) | 5 | À définir | To Do |
-| S2-09 | CI : ajout de l'étape tests | 2 | À définir | To Do |
-| S2-10 | Schéma d'architecture + ADR | 3 | À définir | To Do |
-| S2-11 | Screencast de démo (3-5 min) | 2 | À définir | To Do |
-| S2-12 | Bonus (si temps restant) : notifications, commentaires ou export | 8 | À définir | To Do |
+| S2-01 | Logging structuré JSON (backend) | 3 | Ibrahima | To Do |
+| S2-02 | Endpoint /metrics (format Prometheus) | 3 | Ibrahima | To Do |
+| S2-03 | Dashboard : stats + temps moyen de résolution | 5 | Arthur | To Do |
+| S2-04 | Filtrage, tri et recherche textuelle | 5 | Arthur | To Do |
+| S2-05 | Multi-stage builds Dockerfiles (front + back) | 5 | Abd-Ellah | To Do |
+| S2-06 | docker-compose.prod.yml (séparation dev/prod) | 3 | Abd-Ellah | To Do |
+| S2-07 | Sécurité Docker (non-root, .dockerignore, tags versionnés) | 3 | Abd-Ellah | To Do |
+| S2-08 | Compléter les tests unitaires (calcul temps moyen, conflits) | 5 | Ibrahima | To Do |
+| S2-09 | CI : ajout de l'étape tests | 2 | Abd-Ellah | To Do |
+| S2-10 | Schéma d'architecture + ADR | 3 | Ibrahima | To Do |
+| S2-11 | Screencast de démo (3-5 min) | 2 | Arthur | To Do |
+| S2-12 | Bonus (si temps restant) : notifications, commentaires ou export | 8 | Équipe (à confirmer) | To Do |
 
 **Total Sprint 2** : 47 points (hors bonus optionnel)
