@@ -241,6 +241,9 @@ en conflit avec un projet NestJS classique (CommonJS, décorateurs
   pour l'identité de l'auteur. À retirer du DTO une fois le JWT en place, au
   profit de l'utilisateur de la requête.
 
+> **Mise à jour (S1-04)** : `createdById` a été retiré du DTO ; l'auteur est
+> désormais pris depuis le JWT (`@CurrentUser()`).
+
 ### Alternatives écartées
 
 - **Générer le client dans `node_modules/.prisma`** (comportement historique
@@ -265,3 +268,35 @@ en conflit avec un projet NestJS classique (CommonJS, décorateurs
   laisser un `.js` orphelin dans `dist/` jusqu'au prochain rebuild complet de
   l'image — acceptable en dev, sans impact en prod (image reconstruite à
   chaque déploiement).
+
+---
+
+## ADR-006 — Authentification JWT et garde de rôles
+
+**Date** : 03/08/2026 · **Statut** : Acceptée
+
+### Contexte
+
+S1-04 demande l'authentification JWT et un middleware de rôles
+(`USER` / `TECHNICIEN` / `ADMIN`). Le CRUD tickets (S1-03) exposait encore
+`createdById` dans le DTO faute d'identité authentifiée.
+
+### Décision
+
+- **JWT Bearer** via `@nestjs/jwt` + `passport-jwt` (`Authorization: Bearer …`).
+- Endpoints publics : `POST /auth/register` (rôle forcé `USER`), `POST /auth/login`.
+- Endpoint protégé : `GET /auth/me`.
+- **`JwtAuthGuard` + `RolesGuard`** sur `/tickets` : lecture/création pour tout
+  utilisateur authentifié ; `PATCH` / `close` réservés à `TECHNICIEN` et `ADMIN`.
+- **`createdById`** dérivé du JWT (`@CurrentUser()`), retiré du DTO.
+- Secret via `JWT_SECRET` (défaut dev uniquement).
+
+### Alternatives écartées
+
+- Sessions cookie : plus lourdes pour une API consommée aussi par le frontend SPA.
+- Casbin / ACL fine : hors scope MVP ; le décorateur `@Roles()` suffit.
+
+### Conséquences
+
+- Les clients doivent d'abord s'authentifier pour appeler `/tickets`.
+- Le seed existant (`changeme`) reste valide pour les trois comptes de test.
