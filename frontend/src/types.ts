@@ -27,3 +27,22 @@ export interface CreateTicketInput {
   createdById: number;
   assignedToId?: number;
 }
+
+export interface TicketStats {
+  total: number;
+  byStatus: Record<TicketStatus, number>;
+  byPriority: Record<TicketPriority, number>;
+  /** null tant qu'aucun ticket n'a été résolu. */
+  averageResolutionHours: number | null;
+}
+
+export type SortableField = 'createdAt' | 'priority' | 'status';
+
+export interface TicketFilters {
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  assignedToId?: number;
+  search?: string;
+  sortBy?: SortableField;
+  sortOrder?: 'asc' | 'desc';
+}

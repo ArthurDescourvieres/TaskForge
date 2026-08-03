@@ -66,8 +66,8 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 |---|---|---|---|---|
 | S2-01 | Logging structuré JSON (backend) | 3 | Ibrahima | To Do |
 | S2-02 | Endpoint /metrics (format Prometheus) | 3 | Ibrahima | To Do |
-| S2-03 | Dashboard : stats + temps moyen de résolution | 5 | Arthur | To Do |
-| S2-04 | Filtrage, tri et recherche textuelle | 5 | Arthur | To Do |
+| S2-03 | Dashboard : stats + temps moyen de résolution | 5 | Arthur | Done |
+| S2-04 | Filtrage, tri et recherche textuelle | 5 | Arthur | Done |
 | S2-05 | Multi-stage builds Dockerfiles (front + back) | 5 | Abd-Ellah | To Do |
 | S2-06 | docker-compose.prod.yml (séparation dev/prod) | 3 | Abd-Ellah | To Do |
 | S2-07 | Sécurité Docker (non-root, .dockerignore, tags versionnés) | 3 | Abd-Ellah | To Do |

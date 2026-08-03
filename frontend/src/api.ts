@@ -1,4 +1,10 @@
-import type { CreateTicketInput, Ticket, User } from './types';
+import type {
+  CreateTicketInput,
+  Ticket,
+  TicketFilters,
+  TicketStats,
+  User,
+} from './types';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
@@ -15,8 +21,25 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export function getTickets(): Promise<Ticket[]> {
-  return request('/tickets');
+/** Ne transmet que les filtres réellement renseignés : un param vide
+ *  ferait échouer la validation côté API. */
+function toQueryString(filters: TicketFilters): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== '') {
+      params.set(key, String(value));
+    }
+  }
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export function getTickets(filters: TicketFilters = {}): Promise<Ticket[]> {
+  return request(`/tickets${toQueryString(filters)}`);
+}
+
+export function getTicketStats(): Promise<TicketStats> {
+  return request('/tickets/stats');
 }
 
 export function createTicket(input: CreateTicketInput): Promise<Ticket> {
