@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TicketStatus } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -11,8 +15,16 @@ const RESOLVING_STATUSES: TicketStatus[] = ['RESOLU', 'FERME'];
 export class TicketsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateTicketDto) {
-    return this.prisma.ticket.create({ data: dto });
+  create(dto: CreateTicketDto, createdById: number) {
+    return this.prisma.ticket.create({
+      data: {
+        title: dto.title,
+        description: dto.description,
+        priority: dto.priority,
+        assignedToId: dto.assignedToId,
+        createdById,
+      },
+    });
   }
 
   findAll() {
@@ -37,7 +49,9 @@ export class TicketsService {
     }
 
     const resolvedAt =
-      dto.status && RESOLVING_STATUSES.includes(dto.status) && !existing.resolvedAt
+      dto.status &&
+      RESOLVING_STATUSES.includes(dto.status) &&
+      !existing.resolvedAt
         ? new Date()
         : undefined;
 
@@ -48,6 +62,6 @@ export class TicketsService {
   }
 
   close(id: number) {
-    return this.update(id, { status: 'FERME' as TicketStatus });
+    return this.update(id, { status: 'FERME' });
   }
 }
