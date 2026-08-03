@@ -20,6 +20,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - /app/src/generated
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-taskforge}:${POSTGRES_PASSWORD:-taskforge_dev_password}@postgres:5432/${POSTGRES_DB:-taskforge}?schema=public
     depends_on:
