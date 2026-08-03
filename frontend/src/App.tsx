@@ -1,122 +1,164 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { TicketCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { createTicket, getTicketStats, getTickets, getUsers } from '@/api';
+import { CreateTicketDialog } from '@/components/CreateTicketDialog';
+import { FilterBar } from '@/components/FilterBar';
+import { StatBand } from '@/components/StatBand';
+import { TicketTable } from '@/components/TicketTable';
+import { Toaster } from '@/components/ui/sonner';
+import type {
+  CreateTicketInput,
+  Ticket,
+  TicketFilters,
+  TicketStats,
+  User,
+} from '@/types';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState<TicketStats | null>(null);
+  const [filters, setFilters] = useState<TicketFilters>({
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
+  const [search, setSearch] = useState('');
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+  const [error, setError] = useState('');
+
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  // La saisie ne déclenche pas une requête par caractère : on attend une pause.
+  // Renvoyer l'objet inchangé quand la valeur est identique évite un rechargement
+  // inutile au montage.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((current) => {
+        const next = search || undefined;
+        return current.search === next ? current : { ...current, search: next };
+      });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    getUsers()
+      .then(setUsers)
+      .catch(() => setError("Impossible de contacter l'API."));
+  }, []);
+
+  useEffect(() => {
+    Promise.all([getTickets(filters), getTicketStats()])
+      .then(([ticketsData, statsData]) => {
+        setTickets(ticketsData);
+        setStats(statsData);
+        setError('');
+      })
+      .catch(() => setError("Impossible de contacter l'API."));
+  }, [filters]);
+
+  async function handleCreate(input: CreateTicketInput) {
+    const created = await createTicket(input);
+
+    // On relit la liste plutôt que d'insérer le ticket en tête : c'est le tri
+    // et les filtres actifs qui décident de sa place — voire de sa présence.
+    const [freshTickets, freshStats] = await Promise.all([
+      getTickets(filters),
+      getTicketStats(),
+    ]);
+    setTickets(freshTickets);
+    setStats(freshStats);
+    setHighlightId(created.id);
+  }
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        // Une seule séquence à l'ouverture : la page se compose de haut en bas
+        // au lieu de faire apparaître quatre animations sans rapport.
+        gsap
+          .timeline({ defaults: { ease: 'power3.out' } })
+          .from('[data-anim="topbar"]', { y: -12, autoAlpha: 0, duration: 0.5 })
+          .from(
+            '[data-anim="header"]',
+            { y: 16, autoAlpha: 0, duration: 0.6 },
+            '-=0.25',
+          )
+          .from(
+            '[data-anim="tile"]',
+            { y: 18, autoAlpha: 0, duration: 0.5, stagger: 0.07 },
+            '-=0.35',
+          )
+          .from(
+            '[data-anim="toolbar"]',
+            { y: 12, autoAlpha: 0, duration: 0.45 },
+            '-=0.3',
+          );
+      });
+    },
+    { scope: pageRef },
+  );
+
+  const hasActiveFilters =
+    Boolean(search) ||
+    Boolean(filters.status) ||
+    Boolean(filters.priority) ||
+    filters.assignedToId !== undefined;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div ref={pageRef} className="min-h-svh">
+      <header
+        data-anim="topbar"
+        className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-md"
+      >
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3.5">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground"
+              aria-hidden
+            >
+              <TicketCheck className="size-4" strokeWidth={2.25} />
+            </span>
+            <span className="font-heading text-[15px] font-semibold tracking-tight">
+              TaskForge
+            </span>
+          </div>
+          <CreateTicketDialog users={users} onCreate={handleCreate} />
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+      </header>
+
+      <StatBand stats={stats} />
+
+      <main className="mx-auto max-w-6xl space-y-5 px-6 py-10">
+        {error && (
+          <p className="rounded-lg border border-destructive/25 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+            {error}
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        )}
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div data-anim="toolbar">
+          <FilterBar
+            filters={filters}
+            users={users}
+            search={search}
+            onSearchChange={setSearch}
+            onChange={setFilters}
+          />
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <TicketTable
+          tickets={tickets}
+          highlightId={highlightId}
+          hasActiveFilters={hasActiveFilters}
+        />
+      </main>
+
+      <Toaster position="bottom-right" />
+    </div>
+  );
 }
 
-export default App
+export default App;

@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import type { AuthUser } from '../auth/auth.types';
@@ -14,6 +15,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CreateTicketDto } from './dto/create-ticket.dto';
+import { QueryTicketsDto } from './dto/query-tickets.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { TicketsService } from './tickets.service';
 
@@ -28,8 +30,15 @@ export class TicketsController {
   }
 
   @Get()
-  findAll() {
-    return this.ticketsService.findAll();
+  findAll(@Query() query: QueryTicketsDto) {
+    return this.ticketsService.findAll(query);
+  }
+
+  // Doit rester déclarée avant @Get(':id') : sinon Nest fait correspondre
+  // /tickets/stats à la route :id, et ParseIntPipe rejette « stats ».
+  @Get('stats')
+  stats() {
+    return this.ticketsService.stats();
   }
 
   @Get(':id')
