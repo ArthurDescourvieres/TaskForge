@@ -46,11 +46,11 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | S1-03 | API : CRUD tickets (créer/consulter/modifier/fermer) | 8 | Arthur | Done |
 | S1-04 | API : authentification + système de rôles | 8 | Abd-Ellah | To Do |
 | S1-05 | API : assignation / réassignation | 5 | Ibrahima | To Do |
-| S1-06 | Frontend : formulaire création + liste tickets | 8 | Arthur | To Do |
+| S1-06 | Frontend : formulaire création + liste tickets | 8 | Arthur | Done |
 | S1-07 | Frontend : connexion / gestion des rôles côté UI | 5 | Arthur | To Do |
 | S1-08 | Docker Compose dev (front + back + BDD) | 3 | Abd-Ellah | Done |
 | S1-09 | Endpoint /health + /healthz | 2 | Ibrahima | To Do |
-| S1-10 | Setup linter + formatter + pre-commit hook | 2 | Arthur | To Do |
+| S1-10 | Setup linter + formatter + pre-commit hook | 2 | Arthur | Done |
 | S1-11 | Pipeline CI basique (build + lint) | 3 | Abd-Ellah | To Do |
 | S1-12 | Premiers tests unitaires (transitions de statut) | 3 | Ibrahima | To Do |
 
@@ -66,8 +66,8 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 |---|---|---|---|---|
 | S2-01 | Logging structuré JSON (backend) | 3 | Ibrahima | To Do |
 | S2-02 | Endpoint /metrics (format Prometheus) | 3 | Ibrahima | To Do |
-| S2-03 | Dashboard : stats + temps moyen de résolution | 5 | Arthur | To Do |
-| S2-04 | Filtrage, tri et recherche textuelle | 5 | Arthur | To Do |
+| S2-03 | Dashboard : stats + temps moyen de résolution | 5 | Arthur | Done |
+| S2-04 | Filtrage, tri et recherche textuelle | 5 | Arthur | Done |
 | S2-05 | Multi-stage builds Dockerfiles (front + back) | 5 | Abd-Ellah | To Do |
 | S2-06 | docker-compose.prod.yml (séparation dev/prod) | 3 | Abd-Ellah | To Do |
 | S2-07 | Sécurité Docker (non-root, .dockerignore, tags versionnés) | 3 | Abd-Ellah | To Do |

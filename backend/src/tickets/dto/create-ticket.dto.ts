@@ -1,4 +1,10 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { TicketPriority } from '../../generated/prisma/client';
 
 export class CreateTicketDto {

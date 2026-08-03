@@ -6,8 +6,10 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
+import { QueryTicketsDto } from './dto/query-tickets.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { TicketsService } from './tickets.service';
 
@@ -21,8 +23,15 @@ export class TicketsController {
   }
 
   @Get()
-  findAll() {
-    return this.ticketsService.findAll();
+  findAll(@Query() query: QueryTicketsDto) {
+    return this.ticketsService.findAll(query);
+  }
+
+  // Doit rester déclarée avant @Get(':id') : sinon Nest fait correspondre
+  // /tickets/stats à la route :id, et ParseIntPipe rejette « stats ».
+  @Get('stats')
+  stats() {
+    return this.ticketsService.stats();
   }
 
   @Get(':id')

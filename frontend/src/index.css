@@ -1,111 +1,173 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+/* Polices auto-hébergées (pas de CDN : l'app doit tourner hors-ligne en conteneur). */
+@import '@fontsource-variable/instrument-sans';
+@import '@fontsource-variable/public-sans';
+@import '@fontsource-variable/jetbrains-mono';
+
+/*
+  TaskForge — interface claire assumée (pas de thème sombre).
+  Les neutres sont volontairement biaisés vers le bleu de l'accent :
+  un gris pur à côté d'un bleu pastel paraît sale.
+*/
+@theme inline {
+  --font-sans: 'Public Sans Variable', system-ui, sans-serif;
+  --font-heading: 'Instrument Sans Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sévérité (priorité) — volontairement distincte de l'accent :
+     sinon « urgent » et « cliquable » se confondent.
+     Chaque niveau a deux valeurs : une vive pour les aplats décoratifs
+     (liserés, points), une plus sombre pour le texte, qui doit tenir le
+     ratio de contraste AA de 4,5:1 sur fond blanc. */
+  --color-sev-critique: var(--sev-critique);
+  --color-sev-haute: var(--sev-haute);
+  --color-sev-moyenne: var(--sev-moyenne);
+  --color-sev-basse: var(--sev-basse);
+  --color-sev-critique-ink: var(--sev-critique-ink);
+  --color-sev-haute-ink: var(--sev-haute-ink);
+  --color-sev-moyenne-ink: var(--sev-moyenne-ink);
+  --color-sev-basse-ink: var(--sev-basse-ink);
+
+  /* Cycle de vie (statut) — autre dimension, donc autre encodage visuel. */
+  --color-st-ouvert: var(--st-ouvert);
+  --color-st-encours: var(--st-encours);
+  --color-st-resolu: var(--st-resolu);
+  --color-st-ferme: var(--st-ferme);
+  --color-st-ouvert-ink: var(--st-ouvert-ink);
+  --color-st-encours-ink: var(--st-encours-ink);
+  --color-st-resolu-ink: var(--st-resolu-ink);
+  --color-st-ferme-ink: var(--st-ferme-ink);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --radius: 0.75rem;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --background: #ffffff;
+  --foreground: #0e1a2b;
+  --card: #ffffff;
+  --card-foreground: #0e1a2b;
+  --popover: #ffffff;
+  --popover-foreground: #0e1a2b;
+  --primary: #4c7df0;
+  --primary-foreground: #ffffff;
+  --secondary: #f6f9fe;
+  --secondary-foreground: #0e1a2b;
+  --muted: #f6f9fe;
+  --muted-foreground: #5b6e8a;
+  --accent: #eef4fe;
+  --accent-foreground: #1c3f8f;
+  --destructive: #dc4356;
+  --border: #e3ebf7;
+  --input: #e3ebf7;
+  --ring: #4c7df0;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --accent-soft: #c4d8fb;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Vif : liserés et pastilles (décoratifs, jamais porteurs de texte). */
+  --sev-critique: #dc4356;
+  --sev-haute: #e2893b;
+  --sev-moyenne: #6e92b8;
+  --sev-basse: #a3b4c9;
+
+  /* Sombre : libellés. Vérifié ≥ 4,5:1 sur blanc. */
+  --sev-critique-ink: #c02638;
+  --sev-haute-ink: #a25a14;
+  --sev-moyenne-ink: #3a6b96;
+  --sev-basse-ink: #55677e;
+
+  --st-ouvert: #4c7df0;
+  --st-encours: #e2893b;
+  --st-resolu: #3f9c7c;
+  --st-ferme: #8fa3bd;
+
+  --st-ouvert-ink: #2e5fd0;
+  --st-encours-ink: #a25a14;
+  --st-resolu-ink: #26785c;
+  --st-ferme-ink: #55677e;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Tailwind v4 a retiré le curseur « main » par défaut sur les boutons
+     (la preflight suit désormais le comportement natif du navigateur).
+     On le rétablit — sauf sur les éléments désactivés, qui gardent le leur. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
+    text-wrap: balance;
+  }
+
+  /* Les chiffres qui s'empilent en colonne doivent s'aligner. */
+  th,
+  td,
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/*
+  Wash atmosphérique : dégradé bleu → transparent derrière le bandeau de stats.
+  Deux radiales décalées plutôt qu'un linear-gradient, pour éviter la bande
+  diagonale reconnaissable des dégradés SaaS génériques.
+*/
+.wash {
+  background:
+    radial-gradient(
+      120% 90% at 12% 0%,
+      color-mix(in oklab, var(--primary) 16%, transparent) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      90% 70% at 88% 8%,
+      color-mix(in oklab, var(--accent-soft) 42%, transparent) 0%,
+      transparent 58%
+    );
 }
