@@ -46,7 +46,7 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | S1-03 | API : CRUD tickets (créer/consulter/modifier/fermer) | 8 | Arthur | Done |
 | S1-04 | API : authentification + système de rôles | 8 | Abd-Ellah | To Do |
 | S1-05 | API : assignation / réassignation | 5 | Ibrahima | To Do |
-| S1-06 | Frontend : formulaire création + liste tickets | 8 | Arthur | To Do |
+| S1-06 | Frontend : formulaire création + liste tickets | 8 | Arthur | Done |
 | S1-07 | Frontend : connexion / gestion des rôles côté UI | 5 | Arthur | To Do |
 | S1-08 | Docker Compose dev (front + back + BDD) | 3 | Abd-Ellah | Done |
 | S1-09 | Endpoint /health + /healthz | 2 | Ibrahima | To Do |
