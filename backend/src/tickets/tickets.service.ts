@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TicketStatus } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -37,7 +41,9 @@ export class TicketsService {
     }
 
     const resolvedAt =
-      dto.status && RESOLVING_STATUSES.includes(dto.status) && !existing.resolvedAt
+      dto.status &&
+      RESOLVING_STATUSES.includes(dto.status) &&
+      !existing.resolvedAt
         ? new Date()
         : undefined;
 
@@ -48,6 +54,6 @@ export class TicketsService {
   }
 
   close(id: number) {
-    return this.update(id, { status: 'FERME' as TicketStatus });
+    return this.update(id, { status: 'FERME' });
   }
 }

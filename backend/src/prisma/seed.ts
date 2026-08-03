@@ -31,7 +31,11 @@ async function main() {
     'USER',
   );
 
-  console.log({ admin: admin.email, technicien: technicien.email, user: user.email });
+  console.log({
+    admin: admin.email,
+    technicien: technicien.email,
+    user: user.email,
+  });
 }
 
 main()

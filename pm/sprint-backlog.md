@@ -50,7 +50,7 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | S1-07 | Frontend : connexion / gestion des rôles côté UI | 5 | Arthur | To Do |
 | S1-08 | Docker Compose dev (front + back + BDD) | 3 | Abd-Ellah | Done |
 | S1-09 | Endpoint /health + /healthz | 2 | Ibrahima | To Do |
-| S1-10 | Setup linter + formatter + pre-commit hook | 2 | Arthur | To Do |
+| S1-10 | Setup linter + formatter + pre-commit hook | 2 | Arthur | Done |
 | S1-11 | Pipeline CI basique (build + lint) | 3 | Abd-Ellah | To Do |
 | S1-12 | Premiers tests unitaires (transitions de statut) | 3 | Ibrahima | To Do |
 

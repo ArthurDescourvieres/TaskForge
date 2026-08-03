@@ -1,0 +1,17 @@
+{
+  "name": "taskforge",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Racine du monorepo TaskForge : contient uniquement l'outillage partagé (pre-commit hook).",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0"
+  },
+  "lint-staged": {
+    "backend/**/*.ts": "npm --prefix backend run lint",
+    "frontend/**/*.{ts,tsx}": "npm --prefix frontend run format && npm --prefix frontend run lint"
+  }
+}
