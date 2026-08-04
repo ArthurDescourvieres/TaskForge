@@ -20,11 +20,6 @@ export class CreateTicketDto {
   @IsOptional()
   priority?: TicketPriority;
 
-  // Temporaire : en l'absence d'authentification (S1-04), le créateur est
-  // fourni par le client. À remplacer par l'utilisateur du JWT une fois l'auth en place.
-  @IsInt()
-  createdById: number;
-
   @IsInt()
   @IsOptional()
   assignedToId?: number;

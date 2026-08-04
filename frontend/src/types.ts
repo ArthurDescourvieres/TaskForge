@@ -1,11 +1,43 @@
 export type TicketPriority = 'BASSE' | 'MOYENNE' | 'HAUTE' | 'CRITIQUE';
 export type TicketStatus = 'OUVERT' | 'EN_COURS' | 'RESOLU' | 'FERME';
+export type Role = 'USER' | 'TECHNICIEN' | 'ADMIN';
 
 export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'USER' | 'TECHNICIEN' | 'ADMIN';
+  role: Role;
+}
+
+/** Ce que renvoie /auth/login, /auth/register et /auth/me. */
+export interface AuthUser {
+  id: number;
+  email: string;
+  name: string;
+  role: Role;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: AuthUser;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+/** Inscription publique : le rôle n'est pas dans le corps, l'API force USER. */
+export interface RegisterInput {
+  email: string;
+  password: string;
+  name: string;
+}
+
+/** Création par un admin : ici le rôle se choisit, c'est le seul moyen de
+ *  fabriquer un technicien ou un second administrateur. */
+export interface CreateUserInput extends RegisterInput {
+  role: Role;
 }
 
 export interface Ticket {
@@ -24,7 +56,7 @@ export interface CreateTicketInput {
   title: string;
   description: string;
   priority: TicketPriority;
-  createdById: number;
+  // Plus de createdById : l'API le déduit du jeton, il ne se déclare plus.
   assignedToId?: number;
 }
 

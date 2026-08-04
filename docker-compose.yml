@@ -23,6 +23,7 @@ services:
       - /app/src/generated
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-taskforge}:${POSTGRES_PASSWORD:-taskforge_dev_password}@postgres:5432/${POSTGRES_DB:-taskforge}?schema=public
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}
     depends_on:
       postgres:
         condition: service_healthy

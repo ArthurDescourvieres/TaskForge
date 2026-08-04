@@ -27,8 +27,20 @@ const WITH_USERS = {
 export class TicketsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateTicketDto) {
-    return this.prisma.ticket.create({ data: dto, include: WITH_USERS });
+  // Le créateur vient du JWT, jamais du corps de la requête : sinon n'importe
+  // qui pourrait ouvrir un ticket au nom d'un autre. Les champs sont listés
+  // un à un plutôt que par diffusion du DTO, pour la même raison.
+  create(dto: CreateTicketDto, createdById: number) {
+    return this.prisma.ticket.create({
+      data: {
+        title: dto.title,
+        description: dto.description,
+        priority: dto.priority,
+        assignedToId: dto.assignedToId,
+        createdById,
+      },
+      include: WITH_USERS,
+    });
   }
 
   findAll(query: QueryTicketsDto = {}) {

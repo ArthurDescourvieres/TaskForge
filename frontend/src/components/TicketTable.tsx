@@ -2,6 +2,12 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { useRef } from 'react';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -10,18 +16,31 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/format';
-import { PRIORITY_META, STATUS_META } from '@/lib/ticket-meta';
+import {
+  ALLOWED_TRANSITIONS,
+  PRIORITY_META,
+  STATUS_META,
+} from '@/lib/ticket-meta';
 import { cn } from '@/lib/utils';
-import type { Ticket } from '@/types';
+import type { Ticket, TicketStatus } from '@/types';
 
 interface Props {
   tickets: Ticket[];
   /** Ticket tout juste créé, mis en évidence le temps qu'on le repère. */
   highlightId: number | null;
   hasActiveFilters: boolean;
+  /** Technicien ou admin : peut faire avancer un ticket dans son cycle de vie. */
+  canManage: boolean;
+  onStatusChange: (id: number, status: TicketStatus) => void;
 }
 
-export function TicketTable({ tickets, highlightId, hasActiveFilters }: Props) {
+export function TicketTable({
+  tickets,
+  highlightId,
+  hasActiveFilters,
+  canManage,
+  onStatusChange,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Les lignes réapparaissent à chaque changement de filtre : le mouvement
@@ -94,9 +113,9 @@ export function TicketTable({ tickets, highlightId, hasActiveFilters }: Props) {
           <TableRow className="hover:bg-transparent">
             <TableHead className="pl-6">Ticket</TableHead>
             <TableHead className="w-32">Priorité</TableHead>
-            <TableHead className="w-36">Statut</TableHead>
+            <TableHead className="w-44">Statut</TableHead>
             <TableHead className="w-44">Assigné à</TableHead>
-            <TableHead className="w-28 text-right pr-6">Créé le</TableHead>
+            <TableHead className="w-28 pr-6 text-right">Créé le</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -135,21 +154,11 @@ export function TicketTable({ tickets, highlightId, hasActiveFilters }: Props) {
               </TableCell>
 
               <TableCell>
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium',
-                    STATUS_META[ticket.status].pill,
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'size-1.5 rounded-full',
-                      STATUS_META[ticket.status].dot,
-                    )}
-                    aria-hidden
-                  />
-                  {STATUS_META[ticket.status].label}
-                </span>
+                <StatusCell
+                  ticket={ticket}
+                  canManage={canManage}
+                  onStatusChange={onStatusChange}
+                />
               </TableCell>
 
               <TableCell className="text-sm">
@@ -168,5 +177,64 @@ export function TicketTable({ tickets, highlightId, hasActiveFilters }: Props) {
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+function StatusPill({ status }: { status: TicketStatus }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium',
+        STATUS_META[status].pill,
+      )}
+    >
+      <span
+        className={cn('size-1.5 rounded-full', STATUS_META[status].dot)}
+        aria-hidden
+      />
+      {STATUS_META[status].label}
+    </span>
+  );
+}
+
+function StatusCell({
+  ticket,
+  canManage,
+  onStatusChange,
+}: {
+  ticket: Ticket;
+  canManage: boolean;
+  onStatusChange: (id: number, status: TicketStatus) => void;
+}) {
+  const transitions = ALLOWED_TRANSITIONS[ticket.status];
+
+  // Un utilisateur standard lit le statut ; il ne le change pas. Un ticket
+  // fermé n'a plus de suite possible, même pour un technicien.
+  if (!canManage || transitions.length === 0) {
+    return <StatusPill status={ticket.status} />;
+  }
+
+  return (
+    <Select
+      value={ticket.status}
+      onValueChange={(value) =>
+        onStatusChange(ticket.id, value as TicketStatus)
+      }
+    >
+      <SelectTrigger
+        size="sm"
+        className="h-auto w-auto border-0 bg-transparent p-0 shadow-none hover:opacity-80 focus-visible:ring-0"
+        aria-label={`Changer le statut du ticket ${ticket.id}`}
+      >
+        <StatusPill status={ticket.status} />
+      </SelectTrigger>
+      <SelectContent>
+        {transitions.map((status) => (
+          <SelectItem key={status} value={status}>
+            {STATUS_META[status].label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

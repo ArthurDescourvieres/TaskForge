@@ -60,3 +60,16 @@ export const STATUS_META: Record<
 
 export const PRIORITIES = Object.keys(PRIORITY_META) as TicketPriority[];
 export const STATUSES = Object.keys(STATUS_META) as TicketStatus[];
+
+/**
+ * Transitions proposées dans l'interface. Doit rester aligné sur
+ * `isValidStatusTransition` côté backend, qui reste seul juge : ceci ne sert
+ * qu'à ne pas proposer une action qui serait refusée. Un ticket fermé est
+ * terminal, d'où la liste vide.
+ */
+export const ALLOWED_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
+  OUVERT: ['EN_COURS', 'FERME'],
+  EN_COURS: ['RESOLU', 'FERME'],
+  RESOLU: ['FERME'],
+  FERME: [],
+};
