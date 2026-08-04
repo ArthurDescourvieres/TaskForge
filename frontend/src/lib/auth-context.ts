@@ -1,11 +1,12 @@
 import { createContext, useContext } from 'react';
-import type { AuthUser, LoginInput, Role } from '@/types';
+import type { AuthUser, LoginInput, RegisterInput, Role } from '@/types';
 
 export interface AuthContextValue {
   user: AuthUser | null;
   /** true tant qu'on vérifie le jeton retrouvé au démarrage. */
   loading: boolean;
   login: (input: LoginInput) => Promise<void>;
+  register: (input: RegisterInput) => Promise<void>;
   logout: () => void;
 }
 
@@ -25,8 +26,23 @@ export function canManageTickets(role: Role | undefined): boolean {
   return role === 'TECHNICIEN' || role === 'ADMIN';
 }
 
+/** Peut créer des comptes et changer les rôles. Même remarque : l'API tranche. */
+export function canManageUsers(role: Role | undefined): boolean {
+  return role === 'ADMIN';
+}
+
+export const ROLES: Role[] = ['USER', 'TECHNICIEN', 'ADMIN'];
+
 export const ROLE_LABELS: Record<Role, string> = {
   USER: 'Utilisateur',
   TECHNICIEN: 'Technicien',
   ADMIN: 'Administrateur',
+};
+
+/** Ce que chaque rôle change concrètement, montré au moment de le choisir :
+ *  « Technicien » ne dit pas de lui-même ce qu'il débloque. */
+export const ROLE_HINTS: Record<Role, string> = {
+  USER: 'Signale des incidents et suit les siens.',
+  TECHNICIEN: 'Prend en charge et résout les tickets de la file.',
+  ADMIN: 'Gère les tickets, les comptes et les rôles.',
 };

@@ -1,7 +1,7 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { TicketCheck } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   createTicket,
@@ -15,7 +15,8 @@ import { FilterBar } from '@/components/FilterBar';
 import { StatBand } from '@/components/StatBand';
 import { TicketTable } from '@/components/TicketTable';
 import { UserMenu } from '@/components/UserMenu';
-import { canManageTickets, useAuth } from '@/lib/auth-context';
+import { UsersAdminDialog } from '@/components/UsersAdminDialog';
+import { canManageTickets, canManageUsers, useAuth } from '@/lib/auth-context';
 import { STATUS_META } from '@/lib/ticket-meta';
 import type {
   CreateTicketInput,
@@ -29,6 +30,7 @@ import type {
 export function TicketQueue() {
   const { user } = useAuth();
   const canManage = canManageTickets(user?.role);
+  const isAdmin = canManageUsers(user?.role);
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -56,11 +58,19 @@ export function TicketQueue() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    getUsers()
-      .then(setUsers)
-      .catch(() => setError("Impossible de contacter l'API."));
+  // Rechargeable : créer un compte ou changer un rôle depuis l'écran admin doit
+  // se répercuter sur le menu « assigné à » et le filtre par technicien.
+  const loadUsers = useCallback(async () => {
+    try {
+      setUsers(await getUsers());
+    } catch {
+      setError("Impossible de contacter l'API.");
+    }
   }, []);
+
+  useEffect(() => {
+    void loadUsers();
+  }, [loadUsers]);
 
   useEffect(() => {
     Promise.all([getTickets(filters), getTicketStats()])
@@ -156,7 +166,10 @@ export function TicketQueue() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {isAdmin && (
+              <UsersAdminDialog users={users} onChanged={loadUsers} />
+            )}
             <CreateTicketDialog users={users} onCreate={handleCreate} />
             <UserMenu />
           </div>

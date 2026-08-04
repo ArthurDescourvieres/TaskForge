@@ -76,5 +76,12 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | S2-10 | Schéma d'architecture + ADR | 3 | Ibrahima | To Do |
 | S2-11 | Screencast de démo (3-5 min) | 2 | Arthur | To Do |
 | S2-12 | Bonus (si temps restant) : notifications, commentaires ou export | 8 | Équipe (à confirmer) | To Do |
+| S2-13 | Inscription publique + gestion des comptes et rôles par l'admin | 5 | Arthur | Done |
 
-**Total Sprint 2** : 47 points (hors bonus optionnel)
+**Total Sprint 2** : 52 points (hors bonus optionnel)
+
+**Note sur S2-13** : tâche ajoutée en cours de sprint. Le cahier des charges
+demande « Admin : gère tout (utilisateurs, tickets, configuration) », or aucune
+tâche ne couvrait la gestion des comptes : le seul moyen de créer un technicien
+était le seed. L'inscription publique, elle, n'est pas exigée par la consigne —
+elle a été ajoutée pour rendre le parcours complet lors de la démo.

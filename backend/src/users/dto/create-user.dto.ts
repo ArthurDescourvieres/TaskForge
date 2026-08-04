@@ -1,11 +1,15 @@
-import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsString, Matches, MinLength } from 'class-validator';
 import {
   MIN_PASSWORD_LENGTH,
   USERNAME_PATTERN,
   USERNAME_RULE,
 } from '../../common/account-rules';
+import { Role } from '../../generated/prisma/client';
 
-export class RegisterDto {
+// Contrairement à RegisterDto, le rôle est ici accepté depuis le corps de la
+// requête : c'est tout l'intérêt de la route, un admin doit pouvoir créer un
+// technicien. La route est protégée par @Roles('ADMIN').
+export class CreateUserDto {
   @IsEmail()
   email: string;
 
@@ -15,10 +19,12 @@ export class RegisterDto {
   })
   password: string;
 
-  // « name » côté base, mais c'est un pseudonyme : voir account-rules.ts.
   @IsString()
   @Matches(USERNAME_PATTERN, {
     message: `Nom d'utilisateur invalide (${USERNAME_RULE})`,
   })
   name: string;
+
+  @IsEnum(Role)
+  role: Role;
 }

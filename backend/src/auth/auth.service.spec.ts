@@ -85,7 +85,7 @@ describe('AuthService', () => {
 
       const result = await service.register({
         email: 'new@taskforge.local',
-        password: 'secret1',
+        password: 'motdepasse-solide',
         name: 'New',
       });
 
@@ -106,7 +106,7 @@ describe('AuthService', () => {
       await expect(
         service.register({
           email: 'taken@taskforge.local',
-          password: 'secret1',
+          password: 'motdepasse-solide',
           name: 'Taken',
         }),
       ).rejects.toBeInstanceOf(ConflictException);

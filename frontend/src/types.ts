@@ -27,6 +27,19 @@ export interface LoginInput {
   password: string;
 }
 
+/** Inscription publique : le rôle n'est pas dans le corps, l'API force USER. */
+export interface RegisterInput {
+  email: string;
+  password: string;
+  name: string;
+}
+
+/** Création par un admin : ici le rôle se choisit, c'est le seul moyen de
+ *  fabriquer un technicien ou un second administrateur. */
+export interface CreateUserInput extends RegisterInput {
+  role: Role;
+}
+
 export interface Ticket {
   id: number;
   title: string;

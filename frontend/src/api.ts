@@ -2,7 +2,10 @@ import type {
   AuthResponse,
   AuthUser,
   CreateTicketInput,
+  CreateUserInput,
   LoginInput,
+  RegisterInput,
+  Role,
   Ticket,
   TicketFilters,
   TicketStats,
@@ -89,6 +92,13 @@ export function login(input: LoginInput): Promise<AuthResponse> {
   });
 }
 
+export function register(input: RegisterInput): Promise<AuthResponse> {
+  return request('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 export function getCurrentUser(): Promise<AuthUser> {
   return request('/auth/me');
 }
@@ -117,4 +127,15 @@ export function updateTicketStatus(
 
 export function getUsers(): Promise<User[]> {
   return request('/users');
+}
+
+export function createUser(input: CreateUserInput): Promise<User> {
+  return request('/users', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateUserRole(id: number, role: Role): Promise<User> {
+  return request(`/users/${id}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  });
 }
