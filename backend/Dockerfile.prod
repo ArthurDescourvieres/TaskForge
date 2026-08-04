@@ -7,7 +7,13 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache openssl
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Le postinstall du package.json lance « prisma generate » : le schéma doit être
+# présent avant npm ci, sinon l'installation échoue. URL factice cantonnée au
+# RUN — la génération lit le schéma, elle n'ouvre aucune connexion.
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+RUN DATABASE_URL="postgresql://build:build@localhost:5432/build?schema=public" \
+    npm ci
 
 # ---- build : génère le client Prisma + compile NestJS ----
 FROM node:22-alpine AS build
@@ -31,7 +37,14 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# Ici le postinstall ne peut pas fonctionner : « prisma » est une devDependency,
+# donc absente avec --omit=dev. On coupe les scripts d'installation — le client
+# généré arrive du stage build juste en dessous — puis on reconstruit
+# explicitement bcrypt, seule dépendance native, dont le binaire est justement
+# téléchargé par un script d'installation.
+RUN npm ci --omit=dev --ignore-scripts \
+  && npm rebuild bcrypt \
+  && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 # client généré requis au runtime (import relatif depuis dist/prisma)
