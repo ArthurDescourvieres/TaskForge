@@ -120,7 +120,7 @@ attend `service_healthy` avant de démarrer.
 
 ## ADR-003 — Organisation de l'équipe : développement solo assumé
 
-**Date** : 31/07/2026 · **Statut** : Acceptée
+**Date** : 31/07/2026 · **Statut** : **Remplacée par ADR-007** (06/08/2026)
 
 ### Contexte
 
@@ -301,3 +301,68 @@ S1-04 demande l'authentification JWT et un middleware de rôles
 
 - Les clients doivent d'abord s'authentifier pour appeler `/tickets`.
 - Le seed existant (`changeme`) reste valide pour les trois comptes de test.
+
+---
+
+## ADR-007 — Organisation de l'équipe : contribution partielle constatée
+
+**Date** : 06/08/2026 · **Statut** : Acceptée · **Remplace** : ADR-003
+
+### Contexte
+
+ADR-003 (31/07) actait un « développement solo assumé » après deux jours
+d'observation — le 30/07 et le 31/07, dont un vendredi — pendant lesquels seul
+Arthur avait commité.
+
+Six jours plus tard, les faits la démentent partiellement :
+
+- **Abd-Ellah a commité à partir du 03/08** et livré 24 points : images Docker
+  multi-stage, docker-compose de production, pipeline CI et authentification JWT
+  (PR #30 et #31).
+- **Ibrahima n'a produit aucun commit et n'est toujours pas collaborateur du
+  dépôt.** Il n'a jamais eu les droits de push. 24 points lui restent assignés.
+
+L'hypothèse « solo » est donc fausse pour un membre et vraie pour l'autre, mais
+pour une raison qu'ADR-003 n'avait pas identifiée : un **défaut d'onboarding**,
+pas un défaut d'engagement.
+
+### Décision
+
+- Remplacer ADR-003. Le projet est mené à **deux contributeurs actifs**, pas un.
+- Conserver l'attribution nominative du backlog telle quelle, comme trace de la
+  planification initiale.
+- Consigner l'écart entre vélocité nominale et vélocité réelle dans la
+  rétrospective plutôt que de réécrire le backlog a posteriori.
+- **Conditionner toute réassignation des 24 points d'Ibrahima à l'ouverture
+  préalable de ses droits sur le dépôt.**
+
+### Justification
+
+ADR-003 a été décidée sur un échantillon de deux jours, trop court pour trancher
+une question d'organisation. Le sprint 2 l'a démontré : 54 points absorbés en
+deux jours, soit plus de trois fois la vélocité mesurée sur tout le sprint 1 —
+un rythme incompatible avec l'hypothèse d'un contributeur unique.
+
+Distinguer « n'a pas contribué » de « n'a pas pu contribuer » change la
+mitigation. Le premier cas appelle une redistribution des tâches, le second
+l'ouverture d'un accès. Traiter le second comme le premier reviendrait à
+redistribuer du travail sans corriger la cause.
+
+### Alternatives écartées
+
+- **Amender ADR-003 en place** : réécrire une décision datée effacerait la trace
+  d'une erreur d'appréciation, or c'est précisément la matière de la
+  rétrospective. ADR-003 reste dans ce document, marquée remplacée.
+- **Réassigner immédiatement les 24 points** : sans droits de push, la
+  réassignation ne débloque rien et masquerait le vrai problème derrière un
+  mouvement de backlog.
+
+### Conséquences
+
+- La rétrospective analyse la rotation des rôles sur la base de deux
+  contributeurs actifs, et non d'un.
+- Les 24 points d'Ibrahima constituent le **risque principal du sprint 2** : ils
+  couvrent le point 6 du cahier des charges (health checks, logs structurés,
+  métriques) et une partie du point 7 (tests unitaires).
+- Si l'accès n'est pas ouvert d'ici le 07/08, une redistribution devient
+  inévitable et le périmètre du sprint 2 devra être réduit en conséquence.
