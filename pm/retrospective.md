@@ -75,7 +75,7 @@ vus en relisant le backlog d'un autre.
 ADR-003 (« développement solo assumé », 31/07) avait anticipé ce constat et l'avait renvoyé à la
 présente rétrospective. Elle est aujourd'hui **partiellement invalidée** : elle a été décidée sur
 deux jours de données, dont un vendredi, et Abd-Ellah a livré 24 points trois jours plus tard.
-Elle est à amender ou à superseder.
+Elle a été remplacée par ADR-007 le 06/08.
 
 ---
 

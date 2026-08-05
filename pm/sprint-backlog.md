@@ -78,7 +78,11 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | S2-12 | Bonus (si temps restant) : notifications, commentaires ou export | 8 | Équipe (à confirmer) | To Do |
 | S2-13 | Inscription publique + gestion des comptes et rôles par l'admin | 5 | Arthur | Done |
 
-**Total Sprint 2** : 52 points (hors bonus optionnel)
+**Total Sprint 2** : 44 points engagés + 8 points de bonus optionnel (S2-12) = **52 points**
+
+**Périmètre projet** : 96 points engagés sur les deux sprints (52 + 44), hors bonus S2-12.
+C'est cette base qui est suivie dans le [burn-down](burndown.png) : suivre un bonus explicitement
+optionnel ferait paraître la courbe en retard sur du travail jamais promis.
 
 **Note sur S2-13** : tâche ajoutée en cours de sprint. Le cahier des charges
 demande « Admin : gère tout (utilisateurs, tickets, configuration) », or aucune
