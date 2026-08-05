@@ -41,7 +41,7 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 
 | ID | Tâche | Story Points | Assigné à | Statut |
 |---|---|---|---|---|
-| S1-01 | Choix stack + setup repo (arborescence attendue) | 2 | Arthur | In Progress |
+| S1-01 | Choix stack + setup repo (arborescence attendue) | 2 | Arthur | Done |
 | S1-02 | Schéma de BDD (tickets, users, rôles) | 3 | Abd-Ellah | Done |
 | S1-03 | API : CRUD tickets (créer/consulter/modifier/fermer) | 8 | Arthur | Done |
 | S1-04 | API : authentification + système de rôles | 8 | Abd-Ellah | Done |
@@ -51,7 +51,7 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | S1-08 | Docker Compose dev (front + back + BDD) | 3 | Abd-Ellah | Done |
 | S1-09 | Endpoint /health + /healthz | 2 | Ibrahima | To Do |
 | S1-10 | Setup linter + formatter + pre-commit hook | 2 | Arthur | Done |
-| S1-11 | Pipeline CI basique (build + lint) | 3 | Abd-Ellah | To Do |
+| S1-11 | Pipeline CI basique (build + lint) | 3 | Abd-Ellah | Done |
 | S1-12 | Premiers tests unitaires (transitions de statut) | 3 | Ibrahima | To Do |
 
 **Total Sprint 1** : 52 points
@@ -68,11 +68,11 @@ Estimation : Story points (échelle Fibonacci : 1, 2, 3, 5, 8, 13)
 | S2-02 | Endpoint /metrics (format Prometheus) | 3 | Ibrahima | To Do |
 | S2-03 | Dashboard : stats + temps moyen de résolution | 5 | Arthur | Done |
 | S2-04 | Filtrage, tri et recherche textuelle | 5 | Arthur | Done |
-| S2-05 | Multi-stage builds Dockerfiles (front + back) | 5 | Abd-Ellah | To Do |
-| S2-06 | docker-compose.prod.yml (séparation dev/prod) | 3 | Abd-Ellah | To Do |
-| S2-07 | Sécurité Docker (non-root, .dockerignore, tags versionnés) | 3 | Abd-Ellah | To Do |
+| S2-05 | Multi-stage builds Dockerfiles (front + back) | 5 | Abd-Ellah | Done |
+| S2-06 | docker-compose.prod.yml (séparation dev/prod) | 3 | Abd-Ellah | Done |
+| S2-07 | Sécurité Docker (non-root, .dockerignore, tags versionnés) | 3 | Abd-Ellah | Done |
 | S2-08 | Compléter les tests unitaires (calcul temps moyen, conflits) | 5 | Ibrahima | To Do |
-| S2-09 | CI : ajout de l'étape tests | 2 | Abd-Ellah | To Do |
+| S2-09 | CI : ajout de l'étape tests | 2 | Abd-Ellah | Done |
 | S2-10 | Schéma d'architecture + ADR | 3 | Ibrahima | To Do |
 | S2-11 | Screencast de démo (3-5 min) | 2 | Arthur | To Do |
 | S2-12 | Bonus (si temps restant) : notifications, commentaires ou export | 8 | Équipe (à confirmer) | To Do |
