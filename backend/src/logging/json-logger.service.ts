@@ -28,7 +28,8 @@ export interface LigneLog {
 export class JsonLogger implements LoggerService {
   private readonly fichier?: WriteStream;
 
-  constructor(dossierLogs = process.env.LOG_DIR) {
+  constructor() {
+    const dossierLogs = process.env.LOG_DIR;
     if (dossierLogs) {
       try {
         mkdirSync(dossierLogs, { recursive: true });

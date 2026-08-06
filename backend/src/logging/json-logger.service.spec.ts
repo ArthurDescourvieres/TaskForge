@@ -4,10 +4,12 @@ import { stockageContexte } from './request-context';
 describe('JsonLogger', () => {
   let logger: JsonLogger;
   let lignes: string[];
+  const logDirInitial = process.env.LOG_DIR;
 
   beforeEach(() => {
     // Sans LOG_DIR, aucun fichier n'est ouvert : le test reste sans effet de bord.
-    logger = new JsonLogger(undefined);
+    delete process.env.LOG_DIR;
+    logger = new JsonLogger();
     lignes = [];
     // Capture dans un tableau typé plutôt que via spy.mock.calls, qui est `any`.
     jest.spyOn(process.stdout, 'write').mockImplementation((morceau) => {
@@ -18,6 +20,11 @@ describe('JsonLogger', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    if (logDirInitial === undefined) {
+      delete process.env.LOG_DIR;
+    } else {
+      process.env.LOG_DIR = logDirInitial;
+    }
   });
 
   function derniereBrute(): string {

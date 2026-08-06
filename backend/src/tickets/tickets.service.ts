@@ -51,7 +51,6 @@ export class TicketsService {
       include: WITH_USERS,
     });
 
-    // Après l'écriture : un échec Prisma ne doit pas gonfler le compteur.
     this.metrics.incrementerTicketsCrees();
 
     return ticket;
