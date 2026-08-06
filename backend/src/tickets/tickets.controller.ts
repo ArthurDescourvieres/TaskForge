@@ -14,6 +14,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { AssignTicketDto } from './dto/assign-ticket.dto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { QueryTicketsDto } from './dto/query-tickets.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
@@ -50,6 +51,14 @@ export class TicketsController {
   @Roles('TECHNICIEN', 'ADMIN')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTicketDto) {
     return this.ticketsService.update(id, dto);
+  }
+
+  // Assignation et réassignation (S1-05). Même restriction de rôle que les
+  // autres mutations : un utilisateur standard ne redistribue pas le travail.
+  @Patch(':id/assign')
+  @Roles('TECHNICIEN', 'ADMIN')
+  assign(@Param('id', ParseIntPipe) id: number, @Body() dto: AssignTicketDto) {
+    return this.ticketsService.assign(id, dto.assignedToId);
   }
 
   @Patch(':id/close')

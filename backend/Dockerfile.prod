@@ -51,6 +51,12 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/src/generated ./dist/generated
 COPY --from=build /app/prisma ./prisma
 
+# Point de montage du volume de logs partagé (S2-01), créé et possédé par « app »
+# AVANT le montage : Docker recopie l'ownership du répertoire de l'image dans le
+# volume nommé. Sans ce mkdir le volume appartiendrait à root et le processus
+# non-root ne pourrait pas y écrire.
+RUN mkdir -p /app/logs && chown app:app /app/logs
+
 USER app
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
