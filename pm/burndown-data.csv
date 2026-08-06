@@ -1,0 +1,9 @@
+date,sprint,points_restants_sprint,points_restants_projet,commentaire
+2026-07-30,1,50,94,S1-01 terminé (2 pts) — setup repo + choix stack
+2026-07-31,1,36,80,"S1-08 (3 pts) + S1-02 (3 pts) + S1-03 (8 pts) terminés — docker-compose dev, schéma Prisma, API CRUD tickets"
+2026-08-01,1,36,80,Week-end — aucune livraison
+2026-08-02,1,36,80,"Fin du sprint 1 : 16 pts livrés sur 52, 36 pts reportés sur le sprint 2"
+2026-08-03,2,44,44,"PR #30 : S1-11 + S2-05 + S2-06 + S2-07 + S2-09 (16 pts) ; PR #32 : S1-10 + S1-06 + S2-03 + S2-04 (20 pts) — 36 pts livrés"
+2026-08-04,2,26,26,"PR #33 : S1-07 + S2-13 (10 pts) ; PR #31 : S1-04 (8 pts) — 18 pts livrés"
+2026-08-05,2,26,26,"PR #36 : resynchronisation du board et du backlog — aucun story point livré"
+2026-08-06,2,26,26,"Merge des PR #36 et #37, création des daily logs — aucun story point livré"

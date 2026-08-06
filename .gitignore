@@ -1,0 +1,11 @@
+.claude/*
+.cursor/*
+
+CLAUDE.md
+
+# Environnement
+.env
+
+# Node
+node_modules/
+dist/

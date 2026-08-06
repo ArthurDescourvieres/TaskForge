@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  TECHNICIEN
+  ADMIN
+}
+
+enum TicketPriority {
+  BASSE
+  MOYENNE
+  HAUTE
+  CRITIQUE
+}
+
+enum TicketStatus {
+  OUVERT
+  EN_COURS
+  RESOLU
+  FERME
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  ticketsCreated  Ticket[] @relation("TicketCreatedBy")
+  ticketsAssigned Ticket[] @relation("TicketAssignedTo")
+}
+
+model Ticket {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String
+  priority    TicketPriority @default(MOYENNE)
+  status      TicketStatus   @default(OUVERT)
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+
+  createdBy   User @relation("TicketCreatedBy", fields: [createdById], references: [id])
+  createdById Int
+
+  assignedTo   User? @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+  assignedToId Int?
+}

@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+.env
+.env.*
+*.md
+Dockerfile*
+.dockerignore
+.oxlintrc.json
+src/**/*.test.*
+src/**/*.spec.*

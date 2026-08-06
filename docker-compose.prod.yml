@@ -1,0 +1,77 @@
+# Stack production (S2-06) : images multi-stage, pas de volumes source,
+# tags versionnés, utilisateur non-root dans les images applicatives.
+#
+# Lancement :
+#   cp .env.example .env   # renseigner les secrets prod
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  frontend:
+    image: taskforge-frontend:${IMAGE_TAG:-0.1.0}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      target: production
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+    depends_on:
+      - backend
+    healthcheck:
+      # nginx écoute sur 8080 dans le conteneur (image non-privilégiée).
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  backend:
+    image: taskforge-backend:${IMAGE_TAG:-0.1.0}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+      target: production
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-taskforge}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-taskforge}?schema=public
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - LOG_DIR=/app/logs
+    volumes:
+      # Logs centralisés (S2-01). Le point de montage est créé et attribué à
+      # l'utilisateur « app » dans Dockerfile.prod, sinon le volume nommé
+      # appartiendrait à root et le conteneur non-root ne pourrait pas écrire.
+      - taskforge_logs_prod:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16.6-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-taskforge}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      - POSTGRES_DB=${POSTGRES_DB:-taskforge}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taskforge}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_prod_data:
+  taskforge_logs_prod:
