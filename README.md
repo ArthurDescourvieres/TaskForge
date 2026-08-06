@@ -20,9 +20,33 @@ Application de gestion de tickets d'incidents (helpdesk interne).
 
 ### Monitoring & observabilité
 
-- **Logging structuré** : Pino (`nestjs-pino`)
-- **Métriques** : `prom-client` (endpoint `/metrics`, format Prometheus)
-- **Health check** : `/health` (backend), `/healthz` (frontend)
+Implémenté sans dépendance externe : le besoin se limite à exposer des
+compteurs et des lignes JSON, ce qu'une centaine de lignes couvre sans ajouter
+`pino` ni `prom-client` à la surface de l'image.
+
+| Endpoint | Rôle |
+|---|---|
+| `GET /health` | État détaillé de chaque composant (API, base). **503** si dégradé |
+| `GET /health/live` | Liveness — le processus répond, sans toucher la base |
+| `GET /health/ready` | Readiness — **503** tant que la base ne répond pas |
+| `GET /metrics` | Format texte Prometheus 0.0.4 |
+| `GET /healthz` (frontend) | Servi par nginx en prod, par un plugin Vite en dev |
+
+**Logs structurés** — une ligne JSON par événement sur stdout, dupliquée dans
+`$LOG_DIR/backend.log` quand `LOG_DIR` est défini (volume Docker `taskforge_logs`).
+Chaque ligne porte `timestamp`, `level`, `message`, `request_id` et `user_id`.
+Le `request_id` est propagé par `AsyncLocalStorage` et renvoyé au client dans
+l'en-tête `x-request-id`.
+
+**Métriques exposées** — `taskforge_tickets_created_total`,
+`taskforge_http_requests_total{method,status}`,
+`taskforge_http_request_duration_seconds_{sum,count,avg}`,
+`taskforge_users_connected`, `taskforge_process_uptime_seconds`.
+
+**Health checks Docker** — les trois services portent une sonde et
+`restart: unless-stopped`. À noter : Docker Compose ne redémarre pas un
+conteneur passé *unhealthy* (seul Swarm le fait) ; `restart` couvre le crash et
+`depends_on: condition: service_healthy` l'ordre de démarrage.
 
 ### Docker
 

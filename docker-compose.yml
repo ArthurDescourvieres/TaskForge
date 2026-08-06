@@ -1,3 +1,14 @@
+# Stack de développement : hot-reload, volumes montés sur les sources.
+#
+# Health checks (S1-09) : chaque service expose une sonde et porte
+# `restart: unless-stopped`.
+#
+# Limite à connaître : Docker Compose ne redémarre PAS un conteneur passé
+# « unhealthy » — seul Swarm le fait. `restart: unless-stopped` couvre le crash
+# et l'arrêt inattendu du processus, et `condition: service_healthy` empêche un
+# service de démarrer avant sa dépendance. Un redémarrage sur simple perte de
+# santé demanderait un superviseur externe, hors périmètre du MVP.
+
 services:
   frontend:
     build:
@@ -10,6 +21,14 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5173/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      # Vite doit avoir fini de démarrer avant le premier test.
+      start_period: 30s
+    restart: unless-stopped
 
   backend:
     build:
@@ -21,12 +40,24 @@ services:
       - ./backend:/app
       - /app/node_modules
       - /app/src/generated
+      # Logs centralisés (S2-01) : volume nommé, pas un bind sur les sources.
+      - taskforge_logs:/app/logs
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-taskforge}:${POSTGRES_PASSWORD:-taskforge_dev_password}@postgres:5432/${POSTGRES_DB:-taskforge}?schema=public
       - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}
+      - LOG_DIR=/app/logs
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      # /health/ready et non /health : la sonde doit échouer si la base est
+      # tombée, pas seulement si le processus Node est mort.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
 
   postgres:
     image: postgres:16.6-alpine
@@ -43,6 +74,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  taskforge_logs:

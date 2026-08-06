@@ -16,6 +16,13 @@ services:
       - "${FRONTEND_PORT:-8080}:8080"
     depends_on:
       - backend
+    healthcheck:
+      # nginx écoute sur 8080 dans le conteneur (image non-privilégiée).
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   backend:
@@ -31,9 +38,21 @@ services:
       - PORT=3000
       - DATABASE_URL=postgresql://${POSTGRES_USER:-taskforge}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-taskforge}?schema=public
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - LOG_DIR=/app/logs
+    volumes:
+      # Logs centralisés (S2-01). Le point de montage est créé et attribué à
+      # l'utilisateur « app » dans Dockerfile.prod, sinon le volume nommé
+      # appartiendrait à root et le conteneur non-root ne pourrait pas écrire.
+      - taskforge_logs_prod:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     restart: unless-stopped
 
   postgres:
@@ -55,3 +74,4 @@ services:
 
 volumes:
   postgres_prod_data:
+  taskforge_logs_prod:
