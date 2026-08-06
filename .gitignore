@@ -9,3 +9,7 @@ CLAUDE.md
 # Node
 node_modules/
 dist/
+
+# Python — scripts de génération des artefacts (docs/, pm/)
+__pycache__/
+*.pyc
