@@ -21,8 +21,8 @@ describe('MetricsService', () => {
   });
 
   describe('format Prometheus', () => {
-    it('déclare un HELP et un TYPE pour chaque métrique', () => {
-      const sortie = metrics.rendre();
+    it('déclare un HELP et un TYPE pour chaque métrique', async () => {
+      const sortie = await metrics.rendre();
       const noms = sortie
         .split('\n')
         .filter((l) => l.startsWith('# TYPE '))
@@ -34,9 +34,8 @@ describe('MetricsService', () => {
       }
     });
 
-    it('n’émet que des types Prometheus valides', () => {
-      const types = metrics
-        .rendre()
+    it('n’émet que des types Prometheus valides', async () => {
+      const types = (await metrics.rendre())
         .split('\n')
         .filter((l) => l.startsWith('# TYPE '))
         .map((l) => l.split(' ')[3]);
@@ -46,8 +45,8 @@ describe('MetricsService', () => {
       }
     });
 
-    it('expose les trois métriques exigées au CDC', () => {
-      const sortie = metrics.rendre();
+    it('expose les trois métriques exigées au CDC', async () => {
+      const sortie = await metrics.rendre();
 
       // tickets créés, temps moyen de réponse, utilisateurs connectés
       expect(sortie).toContain('taskforge_tickets_created_total');
@@ -55,32 +54,65 @@ describe('MetricsService', () => {
       expect(sortie).toContain('taskforge_users_connected');
     });
 
-    it('émet une série à zéro même sans trafic', () => {
+    it('émet une série à zéro même sans trafic', async () => {
       // Une métrique déclarée sans aucune série se lit comme une panne de
       // collecte plutôt que comme une absence de trafic.
-      expect(metrics.rendre()).toContain('taskforge_http_requests_total{');
+      expect(await metrics.rendre()).toContain(
+        'taskforge_http_requests_total{',
+      );
+    });
+
+    it('annonce le Content-Type du format texte 0.0.4', () => {
+      expect(metrics.typeContenu).toBe(
+        'text/plain; version=0.0.4; charset=utf-8',
+      );
+    });
+
+    it('n’expose aucune métrique d’un autre registre', async () => {
+      // Chaque instance a son registre : les compteurs d'une instance ne
+      // doivent pas fuir dans la sortie d'une autre.
+      const autre = new MetricsService();
+      autre.incrementerTicketsCrees();
+
+      expect(
+        valeur(await metrics.rendre(), 'taskforge_tickets_created_total'),
+      ).toBe(0);
+      expect(
+        valeur(await autre.rendre(), 'taskforge_tickets_created_total'),
+      ).toBe(1);
+    });
+  });
+
+  describe('métriques process et Node', () => {
+    it('expose les métriques par défaut de prom-client', async () => {
+      const sortie = await metrics.rendre();
+
+      // Le gain concret de la dépendance : CPU, mémoire et event loop sans
+      // ligne de code supplémentaire.
+      expect(sortie).toContain('process_cpu_seconds_total');
+      expect(sortie).toContain('nodejs_heap_size_used_bytes');
     });
   });
 
   describe('tickets créés', () => {
-    it('part de zéro', () => {
-      expect(valeur(metrics.rendre(), 'taskforge_tickets_created_total')).toBe(
-        0,
-      );
+    it('part de zéro', async () => {
+      expect(
+        valeur(await metrics.rendre(), 'taskforge_tickets_created_total'),
+      ).toBe(0);
     });
 
-    it('compte chaque création', () => {
+    it('compte chaque création', async () => {
       metrics.incrementerTicketsCrees();
       metrics.incrementerTicketsCrees();
-      expect(valeur(metrics.rendre(), 'taskforge_tickets_created_total')).toBe(
-        2,
-      );
+      expect(
+        valeur(await metrics.rendre(), 'taskforge_tickets_created_total'),
+      ).toBe(2);
     });
   });
 
   describe('temps de réponse', () => {
-    it('vaut zéro tant qu’aucune requête n’a été traitée', () => {
-      const sortie = metrics.rendre();
+    it('vaut zéro tant qu’aucune requête n’a été traitée', async () => {
+      const sortie = await metrics.rendre();
       expect(
         valeur(sortie, 'taskforge_http_request_duration_seconds_avg'),
       ).toBe(0);
@@ -89,11 +121,11 @@ describe('MetricsService', () => {
       ).toBe(0);
     });
 
-    it('calcule la moyenne en secondes', () => {
+    it('calcule la moyenne en secondes', async () => {
       metrics.enregistrerRequete('GET', 200, 100);
       metrics.enregistrerRequete('GET', 200, 300);
 
-      const sortie = metrics.rendre();
+      const sortie = await metrics.rendre();
       expect(
         valeur(sortie, 'taskforge_http_request_duration_seconds_avg'),
       ).toBeCloseTo(0.2);
@@ -105,12 +137,25 @@ describe('MetricsService', () => {
       ).toBe(2);
     });
 
-    it('sépare les séries par méthode et statut', () => {
+    it('répartit les durées dans les buckets de l’histogramme', async () => {
+      metrics.enregistrerRequete('GET', 200, 20);
+
+      const sortie = await metrics.rendre();
+      // 20 ms tombe sous le bucket 0.025 s et au-dessus de 0.01 s.
+      expect(sortie).toContain(
+        'taskforge_http_request_duration_seconds_bucket{le="0.025"} 1',
+      );
+      expect(sortie).toContain(
+        'taskforge_http_request_duration_seconds_bucket{le="0.01"} 0',
+      );
+    });
+
+    it('sépare les séries par méthode et statut', async () => {
       metrics.enregistrerRequete('GET', 200, 10);
       metrics.enregistrerRequete('POST', 201, 20);
       metrics.enregistrerRequete('GET', 200, 30);
 
-      const sortie = metrics.rendre();
+      const sortie = await metrics.rendre();
       expect(sortie).toContain(
         'taskforge_http_requests_total{method="GET",status="200"} 2',
       );
@@ -119,11 +164,11 @@ describe('MetricsService', () => {
       );
     });
 
-    it('agrège les erreurs comme le reste du trafic', () => {
+    it('agrège les erreurs comme le reste du trafic', async () => {
       metrics.enregistrerRequete('GET', 500, 5);
       expect(
         valeur(
-          metrics.rendre(),
+          await metrics.rendre(),
           'taskforge_http_request_duration_seconds_count',
         ),
       ).toBe(1);
@@ -159,6 +204,15 @@ describe('MetricsService', () => {
 
       metrics.marquerUtilisateurActif(1, T0 + 17 * 60_000);
       expect(metrics.utilisateursConnectes(T0 + 17 * 60_000)).toBe(1);
+    });
+
+    it('reporte le compte dans la sortie Prometheus', async () => {
+      metrics.marquerUtilisateurActif(1, T0);
+      metrics.marquerUtilisateurActif(2, T0);
+
+      expect(
+        valeur(await metrics.rendre(T0 + 1000), 'taskforge_users_connected'),
+      ).toBe(2);
     });
   });
 });

@@ -1,6 +1,13 @@
 import { Injectable, LoggerService } from '@nestjs/common';
-import { createWriteStream, mkdirSync, WriteStream } from 'node:fs';
+import { createWriteStream, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  levels,
+  multistream,
+  pino,
+  type Logger as PinoLogger,
+  type StreamEntry,
+} from 'pino';
 import { contexteActuel } from './request-context';
 
 export type NiveauLog = 'error' | 'warn' | 'info' | 'debug' | 'verbose';
@@ -16,7 +23,15 @@ export interface LigneLog {
 }
 
 /**
- * Logger JSON structuré (S2-01).
+ * `verbose` n'existe pas chez pino, qui s'arrête à `trace`. On le déclare comme
+ * niveau personnalisé plutôt que de le replier sur `trace` : NestJS distingue
+ * les deux et le libellé émis doit rester celui que l'appelant a demandé.
+ * La valeur 15 le place entre `trace` (10) et `debug` (20).
+ */
+const NIVEAUX_PERSONNALISES = { verbose: 15 } as const;
+
+/**
+ * Logger JSON structuré (S2-01), adossé à pino (ADR-008).
  *
  * Chaque ligne porte au minimum timestamp, level, message, request_id et
  * user_id, ces deux derniers étant repris du contexte de requête courant.
@@ -26,15 +41,60 @@ export interface LigneLog {
  */
 @Injectable()
 export class JsonLogger implements LoggerService {
-  private readonly fichier?: WriteStream;
+  private readonly pino: PinoLogger<'verbose'>;
 
   constructor() {
+    this.pino = pino<'verbose'>(
+      {
+        // Le niveau le plus bas, sinon pino filtrerait debug et verbose : le
+        // choix de ce qui est journalisé appartient à l'appelant.
+        level: 'verbose',
+        customLevels: NIVEAUX_PERSONNALISES,
+        // pino nomme ses champs `time`, `level` (numérique) et `msg`. Le CDC
+        // impose timestamp, level et message : on redéfinit les trois.
+        timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
+        messageKey: 'message',
+        formatters: {
+          level: (libelle) => ({ level: libelle }),
+        },
+        // Ni pid ni hostname : en conteneur ils ne distinguent rien et
+        // alourdissent chaque ligne.
+        base: undefined,
+        // request_id et user_id sont relus à chaque ligne, y compris depuis une
+        // couche qui n'a aucune notion de HTTP.
+        mixin: () => {
+          const contexte = contexteActuel();
+          return {
+            request_id: contexte?.requestId ?? null,
+            user_id: contexte?.userId ?? null,
+          };
+        },
+      },
+      // Chaque flux filtre pour son compte, à `info` par défaut : sans ce
+      // réglage, debug et verbose passeraient le logger puis seraient jetés
+      // ici. Le mapping des niveaux est nécessaire pour que multistream sache
+      // situer `verbose`, qui ne fait pas partie des niveaux standards.
+      multistream(this.sorties(), {
+        levels: { ...levels.values, ...NIVEAUX_PERSONNALISES },
+      }),
+    );
+  }
+
+  /** stdout, plus le fichier du volume partagé quand LOG_DIR est défini. */
+  private sorties(): StreamEntry<'verbose'>[] {
+    const flux: StreamEntry<'verbose'>[] = [
+      { stream: process.stdout, level: 'verbose' },
+    ];
     const dossierLogs = process.env.LOG_DIR;
+
     if (dossierLogs) {
       try {
         mkdirSync(dossierLogs, { recursive: true });
-        this.fichier = createWriteStream(join(dossierLogs, 'backend.log'), {
-          flags: 'a',
+        flux.push({
+          level: 'verbose',
+          stream: createWriteStream(join(dossierLogs, 'backend.log'), {
+            flags: 'a',
+          }),
         });
       } catch (erreur) {
         // Un volume non montable ne doit pas empêcher l'API de démarrer :
@@ -44,6 +104,8 @@ export class JsonLogger implements LoggerService {
         );
       }
     }
+
+    return flux;
   }
 
   log(message: unknown, context?: string): void {
@@ -76,34 +138,15 @@ export class JsonLogger implements LoggerService {
     this.ecrire(niveau, message, context, extra);
   }
 
-  formatter(
-    niveau: NiveauLog,
-    message: unknown,
-    context?: string,
-    extra?: Record<string, unknown>,
-  ): LigneLog {
-    const contexte = contexteActuel();
-
-    return {
-      timestamp: new Date().toISOString(),
-      level: niveau,
-      message: typeof message === 'string' ? message : JSON.stringify(message),
-      context: context ?? null,
-      request_id: contexte?.requestId ?? null,
-      user_id: contexte?.userId ?? null,
-      ...extra,
-    };
-  }
-
   private ecrire(
     niveau: NiveauLog,
     message: unknown,
     context?: string,
     extra?: Record<string, unknown>,
   ): void {
-    const ligne = `${JSON.stringify(this.formatter(niveau, message, context, extra))}\n`;
-
-    process.stdout.write(ligne);
-    this.fichier?.write(ligne);
+    this.pino[niveau](
+      { context: context ?? null, ...extra },
+      typeof message === 'string' ? message : JSON.stringify(message),
+    );
   }
 }

@@ -1,4 +1,7 @@
-import { JsonLogger } from './json-logger.service';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { JsonLogger, type LigneLog } from './json-logger.service';
 import { stockageContexte } from './request-context';
 
 describe('JsonLogger', () => {
@@ -31,8 +34,8 @@ describe('JsonLogger', () => {
     return lignes.at(-1) ?? '';
   }
 
-  function derniereLigne(): Record<string, unknown> {
-    return JSON.parse(derniereBrute()) as Record<string, unknown>;
+  function derniereLigne(): LigneLog {
+    return JSON.parse(derniereBrute()) as LigneLog;
   }
 
   describe('champs obligatoires', () => {
@@ -60,7 +63,7 @@ describe('JsonLogger', () => {
       logger.log('démarrage');
       const { timestamp } = derniereLigne();
 
-      expect(new Date(timestamp as string).toISOString()).toBe(timestamp);
+      expect(new Date(timestamp).toISOString()).toBe(timestamp);
     });
   });
 
@@ -111,6 +114,59 @@ describe('JsonLogger', () => {
       const ligne = derniereLigne();
       expect(ligne.request_id).toBe('req-43');
       expect(ligne.user_id).toBeNull();
+    });
+  });
+
+  describe('champs propres à pino', () => {
+    it('n’émet aucun champ résiduel de la bibliothèque', () => {
+      logger.log('démarrage');
+      const ligne = derniereLigne();
+
+      // pino nomme ses champs time, msg, pid et hostname. Le CDC impose
+      // timestamp et message, et les deux derniers ne distinguent rien en
+      // conteneur : aucun ne doit ressortir.
+      for (const champ of ['time', 'msg', 'pid', 'hostname']) {
+        expect(ligne).not.toHaveProperty(champ);
+      }
+    });
+
+    it('émet un niveau textuel, pas la valeur numérique de pino', () => {
+      logger.warn('attention');
+      expect(derniereLigne().level).toBe('warn');
+    });
+  });
+
+  describe('duplication vers LOG_DIR', () => {
+    it('écrit la même ligne dans backend.log', async () => {
+      const dossier = mkdtempSync(join(tmpdir(), 'taskforge-logs-'));
+
+      try {
+        process.env.LOG_DIR = dossier;
+        const journal = new JsonLogger();
+        journal.log('vers le volume partagé');
+
+        const fichier = join(dossier, 'backend.log');
+        let contenu = '';
+
+        // L'écriture fichier passe par un WriteStream : elle n'est pas
+        // garantie synchrone au retour de log().
+        for (let essai = 0; essai < 50 && !contenu; essai += 1) {
+          await new Promise((resoudre) => setTimeout(resoudre, 10));
+          try {
+            contenu = readFileSync(fichier, 'utf8');
+          } catch {
+            contenu = '';
+          }
+        }
+
+        expect(contenu).not.toBe('');
+        const ligne = JSON.parse(contenu.trim()) as LigneLog;
+        expect(ligne.message).toBe('vers le volume partagé');
+        expect(ligne.level).toBe('info');
+      } finally {
+        delete process.env.LOG_DIR;
+        rmSync(dossier, { recursive: true, force: true });
+      }
     });
   });
 
