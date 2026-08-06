@@ -12,8 +12,8 @@ Sources : historique Git, dates de merge des PR, board GitHub, [burn-down](burnd
 | | Périmètre | Livré | Reste | Taux |
 |---|---|---|---|---|
 | Sprint 1 (clos) | 52 pts | **16 pts** | 36 pts reportés | 31 % |
-| Sprint 2 (au 06/08) | 80 pts *(44 engagés + 36 reportés)* | **54 pts** | 26 pts | 68 % |
-| Projet | 96 pts *(hors bonus S2-12)* | **70 pts** | 26 pts | 73 % |
+| Sprint 2 (au 06/08) | 80 pts *(44 engagés + 36 reportés)* | **78 pts** | 2 pts | 98 % |
+| Projet | 96 pts *(hors bonus S2-12)* | **94 pts** | 2 pts | 98 % |
 
 **Vélocité du sprint 1 : 16 points.** C'est la seule valeur réellement close, et donc la seule
 base honnête pour estimer un sprint suivant.
@@ -22,9 +22,9 @@ base honnête pour estimer un sprint suivant.
 
 | 30/07 | 31/07 | 01/08 | 02/08 | 03/08 | 04/08 | 05/08 | 06/08 |
 |---|---|---|---|---|---|---|---|
-| 2 | 14 | 0 | 0 | **36** | **18** | 0 | 0 |
+| 2 | 14 | 0 | 0 | **36** | **18** | 0 | **24** |
 
-Deux journées concentrent **54 des 70 points livrés, soit 77 %**. La moyenne de 8,75 pts/jour ne
+Trois journées concentrent **78 des 94 points livrés, soit 83 %**. La moyenne de 11,75 pts/jour ne
 décrit aucune journée réelle du projet.
 
 Plus gênant : ces pics mesurent des **événements de merge, pas du travail quotidien**. Les
@@ -32,19 +32,29 @@ Plus gênant : ces pics mesurent des **événements de merge, pas du travail quo
 Docker/CI d'Abd-Ellah dont les quatre commits portent le même horodatage. Le burn-down suit le
 rythme d'intégration de l'équipe, pas sa production.
 
+Le pic du 06/08 est du même ordre : 24 points fermés d'un coup à la reprise des tickets
+d'Ibrahima. Un burn-down qui décroche pendant trois jours puis rattrape 24 points en une journée
+décrit une intégration tardive, pas un sursaut de productivité.
+
 ### Nominal contre réel
 
 | | Assigné au backlog | Réellement commité |
 |---|---|---|
-| Arthur | 40 pts | **46 pts** |
+| Arthur | 40 pts | **70 pts** |
 | Abd-Ellah | 30 pts | **24 pts** |
 | Ibrahima | 24 pts | **0 pt** |
 
-L'écart de 6 points vient de S1-02 et S1-08, attribués à Abd-Ellah au backlog mais commités par
-Arthur le 31/07 (`6b9b766`, `136a569`) — trois jours avant le premier commit d'Abd-Ellah. La
-colonne « Assigné à » a donc décrit une intention de planification, pas une réalité d'exécution,
-et personne ne l'a corrigée pendant une semaine. S1-02 cumule même trois versions
-contradictoires : Abd-Ellah au backlog, Arthur sur GitHub, Arthur dans le code.
+Arthur a commité **70 des 94 points livrés** alors que 40 lui étaient assignés. L'écart de
+30 points se décompose en deux causes distinctes :
+
+- **6 points de dérive silencieuse** : S1-02 et S1-08, attribués à Abd-Ellah au backlog mais
+  commités par Arthur le 31/07 (`6b9b766`, `136a569`) — trois jours avant le premier commit
+  d'Abd-Ellah. La colonne « Assigné à » a décrit une intention de planification, pas une réalité
+  d'exécution, et personne ne l'a corrigée pendant une semaine. S1-02 cumule même trois versions
+  contradictoires : Abd-Ellah au backlog, Arthur sur GitHub, Arthur dans le code.
+- **24 points de redistribution assumée** : les tickets d'Ibrahima, repris le 06/08 faute d'accès
+  ouvert (voir section 6). Celle-là est datée, tracée dans une PR et justifiée par ADR-007 —
+  c'est la différence entre subir une dérive et décider d'une reprise.
 
 ---
 
@@ -122,13 +132,25 @@ Elle a été remplacée par ADR-007 le 06/08.
 
 ---
 
-## 6. Ce que cette rétrospective ne peut pas encore trancher
+## 6. La reprise du 06/08, et ce qui reste ouvert
 
-Le sprint 2 n'est pas terminé : 26 points restent ouverts pour trois jours (07 → 09/08), dont 24
-sur des tickets d'Ibrahima toujours sans accès au dépôt. Le burn-down montre **trois jours
-consécutifs sans mouvement** (04, 05 et 06/08) et la ligne idéale repasse sous la ligne réelle à
-J5 : l'avance prise le 03/08 se consomme.
+**Ce qui a été tranché.** ADR-007 conditionnait toute réassignation des 24 points d'Ibrahima à
+l'ouverture préalable de ses droits sur le dépôt, avec une échéance au 07/08. L'accès n'a jamais
+été ouvert. Ces points couvrant le monitoring (S1-09 `/health`, S2-01 logs JSON, S2-02
+`/metrics`) et une partie des tests (S1-12, S2-08) — deux sections entières du cahier des
+charges — la redistribution a été déclenchée le 06/08, un jour avant l'échéance, et absorbée par
+Arthur ([PR #41](https://github.com/ArthurDescourvieres/TaskForge/pull/41)).
 
-Ces points couvrent le monitoring (S1-09 `/health`, S2-01 logs JSON, S2-02 `/metrics`) et une
-partie des tests (S1-12, S2-08) — deux sections entières du cahier des charges. Vélocité finale
-du sprint 2 et taux de complétion sont à mettre à jour ici après le 09/08.
+Le projet est donc à **94 points livrés sur 96**. Seul S2-11 (screencast, 2 pts) reste ouvert.
+
+**Ce que ce chiffre ne dit pas.** Un taux de complétion de 98 % décrit un périmètre tenu, pas une
+équipe qui a fonctionné. Il est atteint parce qu'une personne a absorbé le travail de trois, ce
+qui est exactement le scénario qu'un sprint bien géré doit rendre visible **avant** la dernière
+journée. Le burn-down l'a d'ailleurs montré : plat le 05/08, puis 24 points fermés d'un coup le
+06/08. Une équipe de trois personnes réellement active ne produit pas cette courbe.
+
+**Ce qui reste non tranché.** La vélocité soutenable de cette équipe est toujours inconnue. La
+seule mesure propre reste les **16 points du sprint 1**, seul sprint clos sans reprise de
+dernière minute — c'est elle, et non le 98 %, qui doit servir de base d'estimation. Reste aussi à
+vérifier la seule contre-mesure structurelle identifiée : ouvrir les accès en début de sprint.
+Elle n'a pas encore été testée, faute de sprint suivant.
