@@ -20,9 +20,15 @@ Application de gestion de tickets d'incidents (helpdesk interne).
 
 ### Monitoring & observabilité
 
-Implémenté sans dépendance externe : le besoin se limite à exposer des
-compteurs et des lignes JSON, ce qu'une centaine de lignes couvre sans ajouter
-`pino` ni `prom-client` à la surface de l'image.
+Adossé à **`pino`** (logs) et **`prom-client`** (métriques) — voir
+[ADR-008](docs/adr.md). Ces deux modules ont d'abord été écrits à la main,
+choix défendable tant que le monitoring s'arrêtait à l'exposition ; il ne l'est
+plus dès qu'on vise un vrai collecteur. Le passage aux bibliothèques apporte
+73 séries process et Node sans code supplémentaire, et remplace la moyenne
+cumulée par un histogramme sur lequel Prometheus sait calculer des quantiles.
+
+Le contrat observable n'a pas bougé : mêmes cinq champs de log, mêmes noms de
+métriques, même format texte 0.0.4.
 
 | Endpoint | Rôle |
 |---|---|
@@ -38,10 +44,19 @@ Chaque ligne porte `timestamp`, `level`, `message`, `request_id` et `user_id`.
 Le `request_id` est propagé par `AsyncLocalStorage` et renvoyé au client dans
 l'en-tête `x-request-id`.
 
-**Métriques exposées** — `taskforge_tickets_created_total`,
+**Métriques applicatives** — `taskforge_tickets_created_total`,
 `taskforge_http_requests_total{method,status}`,
-`taskforge_http_request_duration_seconds_{sum,count,avg}`,
+`taskforge_http_request_duration_seconds` (histogramme : `_bucket`, `_sum`,
+`_count`), `taskforge_http_request_duration_seconds_avg`,
 `taskforge_users_connected`, `taskforge_process_uptime_seconds`.
+
+`_avg` est conservée en plus de l'histogramme parce que le cahier des charges
+demande explicitement un « temps moyen de réponse API » ; les quantiles, eux,
+se calculent côté Prometheus depuis les buckets.
+
+**Métriques process et Node** — `collectDefaultMetrics()` ajoute les séries
+`process_*` et `nodejs_*` (CPU, mémoire, event loop, handles), directement
+exploitables par un Grafana branché sur `/metrics`.
 
 **Health checks Docker** — les trois services portent une sonde et
 `restart: unless-stopped`. À noter : Docker Compose ne redémarre pas un
@@ -82,12 +97,16 @@ Images multi-stage, pas de volumes source, utilisateur non-root, tags versionné
 
 ### Tailles d'image (multi-stage)
 
-Mesurées localement après build (`docker images`) :
+Mesurées localement après build (`docker images`), le 06/08/2026 :
 
 | Image | Dev (mono-stage) | Prod (multi-stage) | Gain |
 |---|---|---|---|
-| `taskforge-backend` | **1.28 Go** | **792 Mo** (`0.1.0`) | ≈ 38 % |
-| `taskforge-frontend` | **521 Mo** | **76.4 Mo** (`0.1.0`) | ≈ 85 % |
+| `taskforge-backend` | **1.3 Go** | **746 Mo** (`0.1.0`) | ≈ 43 % |
+| `taskforge-frontend` | **822 Mo** | **74.8 Mo** (`0.1.0`) | ≈ 91 % |
+
+**Coût de `pino` et `prom-client`** (ADR-008) : l'image backend de production
+passe de **736 Mo à 746 Mo**, soit **+10 Mo**, ou +1,4 %. Mesuré en construisant
+le même `Dockerfile.prod` avant et après l'ajout des deux dépendances.
 
 Re-mesurer après un build : `docker images 'taskforge-*'`.
 

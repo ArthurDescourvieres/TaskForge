@@ -336,6 +336,10 @@ pas un défaut d'engagement.
 - **Conditionner toute réassignation des 24 points d'Ibrahima à l'ouverture
   préalable de ses droits sur le dépôt.**
 
+> **Mise à jour (06/08)** : l'accès n'a pas été ouvert. La redistribution a été
+> déclenchée le 06/08, un jour avant l'échéance, et les 24 points ont été
+> absorbés par Arthur (PR #41). Voir la rétrospective, section 6.
+
 ### Justification
 
 ADR-003 a été décidée sur un échantillon de deux jours, trop court pour trancher
@@ -366,3 +370,80 @@ redistribuer du travail sans corriger la cause.
   métriques) et une partie du point 7 (tests unitaires).
 - Si l'accès n'est pas ouvert d'ici le 07/08, une redistribution devient
   inévitable et le périmètre du sprint 2 devra être réduit en conséquence.
+
+---
+
+## ADR-008 — Observabilité : passage à pino et prom-client
+
+**Date** : 06/08/2026 · **Statut** : Acceptée · **Amende** : la justification « sans dépendance » du README
+
+### Contexte
+
+Le logging structuré (S2-01) et l'endpoint `/metrics` (S2-02) ont d'abord été
+écrits à la main : environ 450 lignes couvrant la sérialisation JSON, la
+propagation du `request_id`, les compteurs HTTP et le rendu au format texte
+Prometheus. Le raisonnement d'alors, consigné dans le README, tenait en une
+phrase : le besoin se limitait à des compteurs et des lignes JSON, ce qu'une
+centaine de lignes couvre sans élargir la surface de l'image.
+
+Ce raisonnement valait pour le périmètre du MVP. Il ne tient plus dès qu'on
+vise un vrai collecteur — Prometheus et Grafana, explicitement valorisés au
+cahier des charges — car la partie coûteuse n'est pas d'écrire des compteurs
+mais de produire une exposition conforme sur laquelle un outil tiers sait
+travailler.
+
+### Décision
+
+- **`pino` pour le logging.** `JsonLogger` conserve son interface
+  `LoggerService` et son contrat de sortie ; seule la mécanique d'écriture
+  change.
+- **`prom-client` pour les métriques.** `MetricsService` conserve ses méthodes
+  et les six métriques `taskforge_*` déjà documentées.
+- **Le contrat observable est préservé à l'identique** : mêmes cinq champs de
+  log, mêmes noms de métriques, même format texte 0.0.4. Rien de ce qui était
+  documenté au README ne change de nom.
+
+### Justification
+
+Trois gains concrets, aucun théorique :
+
+- **Les métriques process et Node arrivent gratuitement.**
+  `collectDefaultMetrics()` ajoute 73 séries — CPU, mémoire, event loop,
+  handles — qu'il aurait fallu écrire et tester une par une. C'est ce qui rend
+  un Grafana utile dès le premier branchement.
+- **Le temps de réponse devient un histogramme.** L'implémentation maison
+  n'exposait qu'une moyenne cumulée depuis le démarrage, insensible à toute
+  dégradation récente. Un histogramme permet les quantiles côté Prometheus.
+  `_avg` est conservée : le cahier des charges demande explicitement un « temps
+  moyen de réponse API ».
+- **La sérialisation des logs n'est plus à notre charge.** Échappement,
+  références circulaires, objets `Error` : autant de cas que
+  `JSON.stringify` traite mal et que nous n'avions pas couverts.
+
+### Alternatives écartées
+
+- **Rester sur l'implémentation maison.** Défendable tant que le monitoring
+  s'arrête à l'exposition. Elle demandait en revanche d'écrire nous-mêmes tout
+  ce que `collectDefaultMetrics()` fournit, pour un résultat moins complet.
+- **`nestjs-pino`.** Il apporte l'intégration NestJS et un middleware de
+  requête, dont nous disposons déjà — `AsyncLocalStorage` et l'intercepteur
+  existant fonctionnent. Une dépendance de plus pour du code déjà écrit.
+- **Changer les noms de métriques au passage** (`http_request_duration_seconds`
+  sans préfixe, convention prom-client). Écarté : le README, le support de
+  soutenance et les tests citent les noms actuels. Un renommage aurait fait de
+  cette migration un changement de contrat au lieu d'un changement
+  d'implémentation.
+
+### Conséquences
+
+- `MetricsService.rendre()` devient asynchrone — `registry.metrics()` renvoie
+  une promesse. Le contrôleur et les tests concernés ont été adaptés.
+- `MetricsService` porte **son propre `Registry`** au lieu du registre global de
+  prom-client, qui est un singleton de module : deux instanciations, typiquement
+  un service par test, lèveraient une erreur de double enregistrement.
+- La `multistream` de pino filtre à `info` pour chaque flux, indépendamment du
+  niveau du logger. Les niveaux `debug` et `verbose` exigent un réglage
+  explicite par flux, faute de quoi ils sont émis puis silencieusement jetés.
+- `verbose` n'existe pas chez pino : il est déclaré comme niveau personnalisé
+  (valeur 15) plutôt que replié sur `trace`, NestJS distinguant les deux.
+- L'image backend de production grossit — chiffre mesuré au README.

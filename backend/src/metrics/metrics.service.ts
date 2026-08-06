@@ -1,4 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import {
+  collectDefaultMetrics,
+  Counter,
+  Gauge,
+  Histogram,
+  Registry,
+} from 'prom-client';
 
 /**
  * Fenêtre au-delà de laquelle un utilisateur n'est plus compté comme connecté.
@@ -9,29 +16,95 @@ import { Injectable } from '@nestjs/common';
  */
 const FENETRE_ACTIVITE_MS = 15 * 60 * 1000;
 
-interface CompteurRequetes {
-  total: number;
-  dureeTotaleMs: number;
-}
-
 @Injectable()
 export class MetricsService {
-  private ticketsCrees = 0;
-  private readonly requetes = new Map<string, CompteurRequetes>();
+  /**
+   * Registre propre à l'instance plutôt que le registre global de prom-client.
+   *
+   * Le registre global est un singleton de module : deux instanciations —
+   * typiquement un `new MetricsService()` par test — lèveraient « a metric with
+   * the name … has already been registered ». Un registre par instance rend le
+   * service isolable et testable sans état partagé entre fichiers de test.
+   */
+  private readonly registre = new Registry();
+
+  private readonly ticketsCrees: Counter;
+  private readonly requetesHttp: Counter<'method' | 'status'>;
+  private readonly dureeRequetes: Histogram;
+  private readonly dureeMoyenne: Gauge;
+  private readonly utilisateurs: Gauge;
+  private readonly uptime: Gauge;
+
+  /** Sommes tenues à part : le calcul de la moyenne ne se lit pas dans l'histogramme. */
+  private requetesTotal = 0;
+  private dureeTotaleMs = 0;
+
   private readonly derniereActivite = new Map<number, number>();
+
+  constructor() {
+    this.ticketsCrees = new Counter({
+      name: 'taskforge_tickets_created_total',
+      help: 'Nombre de tickets créés depuis le démarrage du processus.',
+      registers: [this.registre],
+    });
+
+    this.requetesHttp = new Counter({
+      name: 'taskforge_http_requests_total',
+      help: 'Requêtes HTTP traitées, par méthode et code de statut.',
+      labelNames: ['method', 'status'],
+      registers: [this.registre],
+    });
+
+    // Une métrique à labels sans aucune série se lit comme une panne de
+    // collecte plutôt que comme une absence de trafic : on amorce à zéro.
+    this.requetesHttp.inc({ method: 'none', status: '0' }, 0);
+
+    this.dureeRequetes = new Histogram({
+      name: 'taskforge_http_request_duration_seconds',
+      help: 'Distribution du temps de traitement des requêtes HTTP.',
+      // Buckets par défaut de prom-client, adaptés à une API web (5 ms → 10 s).
+      // L'histogramme fournit _sum et _count, et permet en plus de calculer des
+      // quantiles côté Prometheus — ce que la moyenne seule ne permet pas.
+      registers: [this.registre],
+    });
+
+    this.dureeMoyenne = new Gauge({
+      name: 'taskforge_http_request_duration_seconds_avg',
+      help: 'Temps moyen de réponse de l’API depuis le démarrage.',
+      registers: [this.registre],
+    });
+
+    this.utilisateurs = new Gauge({
+      name: 'taskforge_users_connected',
+      help: `Utilisateurs ayant émis une requête authentifiée dans les ${
+        FENETRE_ACTIVITE_MS / 60000
+      } dernières minutes.`,
+      registers: [this.registre],
+    });
+
+    this.uptime = new Gauge({
+      name: 'taskforge_process_uptime_seconds',
+      help: 'Temps écoulé depuis le démarrage du processus.',
+      registers: [this.registre],
+    });
+
+    // Métriques process et Node (CPU, mémoire, event loop, handles). C'est le
+    // gain concret de prom-client : elles ne coûtent rien à écrire ici et
+    // alimentent un Grafana sans travail supplémentaire.
+    collectDefaultMetrics({ register: this.registre });
+  }
 
   /** Événement métier, incrémenté à la création effective d'un ticket. */
   incrementerTicketsCrees(): void {
-    this.ticketsCrees += 1;
+    this.ticketsCrees.inc();
   }
 
   enregistrerRequete(methode: string, statut: number, dureeMs: number): void {
-    const cle = `${methode}|${statut}`;
-    const courant = this.requetes.get(cle) ?? { total: 0, dureeTotaleMs: 0 };
+    this.requetesHttp.inc({ method: methode, status: String(statut) });
+    this.dureeRequetes.observe(dureeMs / 1000);
 
-    courant.total += 1;
-    courant.dureeTotaleMs += dureeMs;
-    this.requetes.set(cle, courant);
+    this.requetesTotal += 1;
+    this.dureeTotaleMs += dureeMs;
   }
 
   marquerUtilisateurActif(userId: number, maintenant = Date.now()): void {
@@ -53,74 +126,33 @@ export class MetricsService {
     return actifs;
   }
 
-  /** Somme des durées et nombre total, tous couples méthode/statut confondus. */
-  private agregatRequetes(): { total: number; dureeTotaleMs: number } {
-    let total = 0;
-    let dureeTotaleMs = 0;
+  /**
+   * Exposition au format texte Prometheus (version 0.0.4).
+   *
+   * Les trois jauges dérivées sont rafraîchies ici plutôt que via un `collect()`
+   * par métrique : le point de mesure reste explicite et `maintenant` reste
+   * injectable, ce dont dépendent les tests de la fenêtre d'activité.
+   */
+  async rendre(maintenant = Date.now()): Promise<string> {
+    this.dureeMoyenne.set(
+      this.requetesTotal === 0
+        ? 0
+        : this.dureeTotaleMs / this.requetesTotal / 1000,
+    );
+    this.utilisateurs.set(this.utilisateursConnectes(maintenant));
+    this.uptime.set(Number(process.uptime().toFixed(3)));
 
-    for (const compteur of this.requetes.values()) {
-      total += compteur.total;
-      dureeTotaleMs += compteur.dureeTotaleMs;
-    }
-
-    return { total, dureeTotaleMs };
+    return this.registre.metrics();
   }
 
-  /** Exposition au format texte Prometheus (version 0.0.4). */
-  rendre(maintenant = Date.now()): string {
-    const { total, dureeTotaleMs } = this.agregatRequetes();
-    const lignes: string[] = [];
-
-    lignes.push(
-      '# HELP taskforge_tickets_created_total Nombre de tickets créés depuis le démarrage du processus.',
-      '# TYPE taskforge_tickets_created_total counter',
-      `taskforge_tickets_created_total ${this.ticketsCrees}`,
-      '',
-      '# HELP taskforge_http_requests_total Requêtes HTTP traitées, par méthode et code de statut.',
-      '# TYPE taskforge_http_requests_total counter',
-    );
-
-    if (this.requetes.size === 0) {
-      // Une métrique déclarée sans série laisserait croire à une panne de
-      // collecte plutôt qu'à une absence de trafic.
-      lignes.push('taskforge_http_requests_total{method="none",status="0"} 0');
-    } else {
-      for (const [cle, compteur] of this.requetes) {
-        const [methode, statut] = cle.split('|');
-        lignes.push(
-          `taskforge_http_requests_total{method="${methode}",status="${statut}"} ${compteur.total}`,
-        );
-      }
-    }
-
-    lignes.push(
-      '',
-      '# HELP taskforge_http_request_duration_seconds_sum Temps cumulé de traitement des requêtes HTTP.',
-      '# TYPE taskforge_http_request_duration_seconds_sum counter',
-      `taskforge_http_request_duration_seconds_sum ${(dureeTotaleMs / 1000).toFixed(6)}`,
-      '',
-      '# HELP taskforge_http_request_duration_seconds_count Nombre de requêtes prises en compte dans la somme.',
-      '# TYPE taskforge_http_request_duration_seconds_count counter',
-      `taskforge_http_request_duration_seconds_count ${total}`,
-      '',
-      '# HELP taskforge_http_request_duration_seconds_avg Temps moyen de réponse de l’API depuis le démarrage.',
-      '# TYPE taskforge_http_request_duration_seconds_avg gauge',
-      `taskforge_http_request_duration_seconds_avg ${
-        total === 0 ? '0' : (dureeTotaleMs / total / 1000).toFixed(6)
-      }`,
-      '',
-      `# HELP taskforge_users_connected Utilisateurs ayant émis une requête authentifiée dans les ${
-        FENETRE_ACTIVITE_MS / 60000
-      } dernières minutes.`,
-      '# TYPE taskforge_users_connected gauge',
-      `taskforge_users_connected ${this.utilisateursConnectes(maintenant)}`,
-      '',
-      '# HELP taskforge_process_uptime_seconds Temps écoulé depuis le démarrage du processus.',
-      '# TYPE taskforge_process_uptime_seconds gauge',
-      `taskforge_process_uptime_seconds ${process.uptime().toFixed(3)}`,
-      '',
-    );
-
-    return lignes.join('\n');
+  /**
+   * Content-Type attendu par un collecteur Prometheus.
+   *
+   * Le contrôleur écrit cet en-tête en dur — `@Header()` est évalué avant toute
+   * injection. L'exposer ici permet au test de vérifier que la valeur codée en
+   * dur correspond toujours à celle de prom-client.
+   */
+  get typeContenu(): string {
+    return this.registre.contentType;
   }
 }

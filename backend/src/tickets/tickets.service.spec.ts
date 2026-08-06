@@ -142,7 +142,9 @@ describe('TicketsService — assignation (S1-05)', () => {
         serviceEnEchec.create({ title: 't', description: 'd' }, 1),
       ).rejects.toThrow();
 
-      expect(metrics.rendre()).toContain('taskforge_tickets_created_total 0');
+      expect(await metrics.rendre()).toContain(
+        'taskforge_tickets_created_total 0',
+      );
     });
   });
 });

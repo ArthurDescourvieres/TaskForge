@@ -274,9 +274,10 @@ def diapo_architecture(pdf):
         "qui documente la BDD.",
     ], taille_ligne=9.5, interligne=4.0)
 
-    encart(ax, 6, 9.6, 88, 6.6,
-           "Monitoring implémenté sans dépendance : une centaine de lignes couvrent le besoin, "
-           "sans ajouter pino ni prom-client à la surface de l'image.", couleur=BLEU, fond=BLEU_CLAIR)
+    encart(ax, 6, 9.6, 88, 8.4,
+           "Monitoring d'abord écrit à la main, puis passé sur pino et prom-client (ADR-008) : le choix maison tenait\n"
+           "tant que le besoin s'arrêtait à l'exposition, plus dès qu'on vise un vrai collecteur.",
+           couleur=BLEU, fond=BLEU_CLAIR)
     pied(ax, 3)
     pdf.savefig(fig, facecolor=SURFACE)
     plt.close(fig)
@@ -311,7 +312,7 @@ def diapo_adr(pdf):
 def diapo_observabilite(pdf):
     fig, ax = nouvelle_diapo()
     titre(ax, "Observabilité",
-          "Santé, logs et métriques — sans dépendance externe.")
+          "Santé, logs et métriques — pino et prom-client, contrat de sortie inchangé.")
 
     ax.text(6, 76, "Endpoints", fontsize=13, fontweight="bold", color=INK_PRIMARY, va="top")
     tableau(ax, 6, 72, [26, 27], ["Route", "Rôle"], [
@@ -322,7 +323,7 @@ def diapo_observabilite(pdf):
         ["GET /healthz", "Frontend, nginx en prod"],
     ], hauteur_ligne=5.0, taille=10)
 
-    carte(ax, 60, 78, 34, AMBRE, AMBRE_CLAIR, "Logs JSON structurés", [
+    carte(ax, 60, 78, 34, AMBRE, AMBRE_CLAIR, "Logs JSON structurés — pino", [
         "Une ligne par événement sur stdout,",
         "dupliquée dans le volume Docker",
         "partagé taskforge_logs.",
@@ -337,8 +338,10 @@ def diapo_observabilite(pdf):
 
     ax.text(6, 39, "Métriques exposées", fontsize=13, fontweight="bold", color=INK_PRIMARY, va="top")
     ax.text(6, 34, "taskforge_tickets_created_total · taskforge_http_requests_total{method,status}\n"
-                   "taskforge_http_request_duration_seconds_{sum,count,avg} · taskforge_users_connected",
+                   "taskforge_http_request_duration_seconds (histogramme) · taskforge_users_connected",
             fontsize=10, color=INK_SECONDARY, va="top", linespacing=1.6, family="monospace")
+    ax.text(6, 26, "Plus 73 séries process et Node fournies par collectDefaultMetrics() : CPU, mémoire, event loop.",
+            fontsize=10, color=INK_MUTED, va="top")
 
     encart(ax, 6, 9.6, 88, 8.4,
            "Une honnêteté technique : Docker Compose ne redémarre pas un conteneur unhealthy — seul Swarm le fait.\n"
