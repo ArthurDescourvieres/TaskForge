@@ -6,4 +6,4 @@ date,sprint,points_restants_sprint,points_restants_projet,commentaire
 2026-08-03,2,44,44,"PR #30 : S1-11 + S2-05 + S2-06 + S2-07 + S2-09 (16 pts) ; PR #32 : S1-10 + S1-06 + S2-03 + S2-04 (20 pts) — 36 pts livrés"
 2026-08-04,2,26,26,"PR #33 : S1-07 + S2-13 (10 pts) ; PR #31 : S1-04 (8 pts) — 18 pts livrés"
 2026-08-05,2,26,26,"PR #36 : resynchronisation du board et du backlog — aucun story point livré"
-2026-08-06,2,26,26,"Merge des PR #36 et #37, création des daily logs — aucun story point livré"
+2026-08-06,2,2,2,"PR #41 : S1-05 + S1-09 + S1-12 + S2-01 + S2-02 + S2-08 + S2-10 (24 pts) — reprise des tickets d'Ibrahima ; PR #42 : remontée de develop sur main"
